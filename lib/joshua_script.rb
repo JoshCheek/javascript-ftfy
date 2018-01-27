@@ -71,17 +71,17 @@ class JoshuaScript
       args = ast.fetch(:arguments).map { |arg| evaluate arg }
       method.call *args
     when 'Literal'
-      ast.fetch :value
+      value = ast.fetch :value
+      if value.kind_of? Integer
+        value.to_f
+      else
+        value
+      end
     when 'BlockStatement'
       body = ast.fetch :body
       body.each { |child| evaluate child }
     when 'ArrowFunctionExpression'
       ast
-      # id = ast.fetch(:id)
-      # raise "Found an id: #{id.inspect}" if id
-      # params = ast.fetch :params
-      # raise "Found params: #{params.inspect}" if params
-      # body = ast.fetch :body
     when 'ArrayExpression'
       ast.fetch(:elements).map { |child| evaluate child }
     when 'ObjectExpression'
@@ -95,6 +95,11 @@ class JoshuaScript
         value = evaluate prop.fetch(:value)
         obj[key] = value
       end
+    when 'BinaryExpression'
+      operator = ast.fetch :operator
+      left     = evaluate ast.fetch :left
+      right    = evaluate ast.fetch :right
+      left.send operator, right
     else
       require "pry"
       binding.pry
