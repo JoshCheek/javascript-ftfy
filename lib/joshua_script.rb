@@ -25,14 +25,15 @@ class JoshuaScript
 
   def run
     @start = Time.now
+    result = nil
     # whenever pause is called, we will continue executing code from here
     callcc { |continuation| @pause = continuation }
     loop do
       @workers.select! &:alive?
       break if @queue.empty? && @workers.empty?
-      code = @queue.shift
-      evaluate code
+      result = evaluate @queue.shift
     end
+    result
   end
 
   private
@@ -44,7 +45,7 @@ class JoshuaScript
 
     case ast.fetch :type
     when 'Program'
-      ast.fetch(:body).each { |child| evaluate child }
+      ast.fetch(:body).map { |child| evaluate child }.last
     when 'Invooooooooke!'
       code = ast.fetch :code
       params = code.fetch :params
@@ -81,6 +82,19 @@ class JoshuaScript
       # params = ast.fetch :params
       # raise "Found params: #{params.inspect}" if params
       # body = ast.fetch :body
+    when 'ArrayExpression'
+      ast.fetch(:elements).map { |child| evaluate child }
+    when 'ObjectExpression'
+      ast.fetch(:properties).each_with_object({}) do |prop, obj|
+        key = prop.fetch(:key)
+        if key.fetch(:type) == "Identifier"
+          key = key.fetch(:name)
+        else
+          key = key.fetch(:value)
+        end
+        value = evaluate prop.fetch(:value)
+        obj[key] = value
+      end
     else
       require "pry"
       binding.pry
