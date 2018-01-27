@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby -W0
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
+require 'joshua_script'
+
+program = $stdin.read
+$stdin.reopen '/dev/tty'
+JoshuaScript.eval program
