@@ -1,0 +1,18 @@
+{
+  "name": "JavaScript-FTFY",
+  "main": "./lib/javascript-ftfy",
+  "version": "0.0.0",
+  "description": "Write sync, run async",
+  "keywords": [
+  ],
+  "activationCommands": {
+    "atom-workspace": "JavaScript FTFY:annotate-document"
+  },
+  "repository": "https://github.com/atom/javascript-ftfy-atom",
+  "license": "MIT",
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  },
+  "dependencies": {
+  }
+}
