@@ -32,4 +32,8 @@ RSpec.describe 'The Interpreter' do
   it 'treats all numbers as floats' do
     js! '9/2', result: 4.5
   end
+
+  it 'can set and get vars', t:true do
+    js! 'var a = 1, b=2; a+b', result: 3
+  end
 end

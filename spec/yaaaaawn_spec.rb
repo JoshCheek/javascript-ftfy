@@ -19,15 +19,15 @@ RSpec.describe 'JoshuaScript' do
   it 'passes this exampal' do
     js <<~JS, [2, /\A0 ms\z/], [10, /\A0 ms\z/], [5, /\A1\d ms\z/], [7, /\A3\d ms\z/]
     // No time has passed since we started
-    showTime // 0 ms
+    showTime() // 0 ms
 
     setTimeout(() => {
-      showTime // 10 ms
+      showTime() // 10 ms
       setTimeout(20)
-      showTime // 30 ms
+      showTime() // 30 ms
     }, 10)
 
-    showTime // 0 ms
+    showTime() // 0 ms
     JS
   end
 end
