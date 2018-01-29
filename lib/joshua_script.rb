@@ -132,6 +132,10 @@ class JoshuaScript
     when 'ReturnStatement'
       # FIXME: need a way to bail on the fn if we want to return
       evaluate ast[:argument], vars
+    when 'MemberExpression'
+      object = evaluate ast[:object], vars
+      prop   = evaluate ast[:property], vars, identifier: :to_s
+      object[prop]
     else
       require "pry"
       binding.pry

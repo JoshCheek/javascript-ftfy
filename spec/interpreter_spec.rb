@@ -101,9 +101,11 @@ RSpec.describe 'The Interpreter' do
     JS
   end
 
-  describe 'console.log' do
-    it 'prints the line number the call came from, and the inspected text'
-    # maybe what happens when you pass it non-string args
+  it 'can look up values from objects' do
+    js! <<~JS, result: 1+2+3
+      var a = 1, obj = {a: 2, b: 3}
+      a + obj.a + obj.b
+    JS
   end
 
   describe 'builtin functions' do
