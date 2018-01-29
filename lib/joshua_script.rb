@@ -77,13 +77,14 @@ class JoshuaScript
       method = evaluate ast.fetch(:callee), vars
       args   = ast.fetch(:arguments).map { |arg| evaluate arg, vars }
       invoke ast, vars, method, args
+
     when 'Literal'
       value = ast.fetch :value
       value = value.to_f if value.kind_of? Integer
       value
     when 'BlockStatement'
       body = ast.fetch :body
-      body.each { |child| evaluate child, vars }
+      body.map { |child| evaluate child, vars }.last
     when 'ArrowFunctionExpression'
       ast
     when 'ArrayExpression'
@@ -110,6 +111,18 @@ class JoshuaScript
       name  = ast.fetch(:id).fetch(:name)
       value = evaluate ast.fetch(:init), vars
       vars.last[name] = value
+    when 'FunctionExpression'
+      ast
+    when 'FunctionDeclaration'
+      name = ast.fetch :id
+      name = evaluate name, vars, identifier: :to_s if name
+      vars.last[name] = ast
+      ast
+    when 'EmptyStatement' # I think it's from a semicolon on its own line
+      nil
+    when 'ReturnStatement'
+      # FIXME: need a way to bail on the fn if we want to return
+      evaluate ast[:argument], vars
     else
       require "pry"
       binding.pry
@@ -160,8 +173,16 @@ class JoshuaScript
       keywords[:ast] = ast if params.include? [:keyreq, :ast]
       invokable.call *args, **keywords
     else
-      require "pry"
-      binding.pry
+      body    = invokable[:body]
+      context = invokable[:params]
+                  .map { |param| evaluate param, vars, identifier: :to_string }
+                  .zip(args)
+                  .to_h
+      vars = [*vars, context]
+      vars.push context
+      result = evaluate body, vars
+      vars.pop
+      result
     end
   end
 

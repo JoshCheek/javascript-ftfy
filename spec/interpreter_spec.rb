@@ -33,7 +33,41 @@ RSpec.describe 'The Interpreter' do
     js! '9/2', result: 4.5
   end
 
-  it 'can set and get vars', t:true do
+  it 'can set and get vars' do
     js! 'var a = 1, b=2; a+b', result: 3
+  end
+
+  it 'can create and call functions' do
+    js! <<~JS, result: [6, 9, 7, 27]
+      var e = 100
+      var f = function(a) { return a + a }
+      var g = x => x * x
+      var h = (y, z) => y + z
+      function i(j) { return j*j*j }
+      ;[f(3), g(3), h(3, 4), i(3)]
+    JS
+  end
+
+  # it 'can see variables across function scopes' do
+  #   js! <<~JS, result: [6, 9, 7, 27]
+  #     var a = 2
+  #     function f1() {
+  #       var b = 3
+  #     function i(j) { return j*j*j }
+  #     ;[f(3), g(3), h(3, 4), i(3)]
+  #   JS
+  # end
+
+  xit 'scopes variables by function' do
+    js! <<~JS, result: idk
+    var a = 1,
+        b = a => a,
+        c = d => a = d
+    JS
+  end
+
+  describe 'console.log' do
+    it 'prints the line number the call came from, and the inspected text'
+    # maybe what happens when you pass it non-string args
   end
 end
