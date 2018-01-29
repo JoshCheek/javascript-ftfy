@@ -66,7 +66,8 @@ class JoshuaScript
     when 'Identifier'
       id = ast.fetch :name
       if identifier == :resolve
-        vars.last.fetch id
+        scope = vars.reverse_each.find { |scope| scope[id] }
+        scope[id]
       else
         id
       end
@@ -85,8 +86,6 @@ class JoshuaScript
     when 'BlockStatement'
       body = ast.fetch :body
       body.map { |child| evaluate child, vars }.last
-    when 'ArrowFunctionExpression'
-      ast
     when 'ArrayExpression'
       ast.fetch(:elements).map { |child| evaluate child, vars }
     when 'ObjectExpression'
@@ -111,9 +110,11 @@ class JoshuaScript
       name  = ast.fetch(:id).fetch(:name)
       value = evaluate ast.fetch(:init), vars
       vars.last[name] = value
-    when 'FunctionExpression'
+    when 'ArrowFunctionExpression', 'FunctionExpression'
+      ast[:scope] = vars.dup
       ast
     when 'FunctionDeclaration'
+      ast[:scope] = vars.dup
       name = ast.fetch :id
       name = evaluate name, vars, identifier: :to_s if name
       vars.last[name] = ast
@@ -178,8 +179,8 @@ class JoshuaScript
                   .map { |param| evaluate param, vars, identifier: :to_string }
                   .zip(args)
                   .to_h
-      vars = [*vars, context]
-      vars.push context
+      fn_scope = invokable[:scope]
+      vars = [*fn_scope, context]
       result = evaluate body, vars
       vars.pop
       result

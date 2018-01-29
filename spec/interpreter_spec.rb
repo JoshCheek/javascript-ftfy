@@ -48,15 +48,19 @@ RSpec.describe 'The Interpreter' do
     JS
   end
 
-  # it 'can see variables across function scopes' do
-  #   js! <<~JS, result: [6, 9, 7, 27]
-  #     var a = 2
-  #     function f1() {
-  #       var b = 3
-  #     function i(j) { return j*j*j }
-  #     ;[f(3), g(3), h(3, 4), i(3)]
-  #   JS
-  # end
+  it 'can see variables across function scopes' do
+    js! <<~JS, result: 2+3+4+5+6
+      var a = 2
+      function f1(b) {
+        var c = 3
+        return function f2(d) {
+          var e = 4
+          return a + b + c + d + e
+        }
+      }
+      f1(5)(6)
+    JS
+  end
 
   xit 'scopes variables by function' do
     js! <<~JS, result: idk

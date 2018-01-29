@@ -25,6 +25,10 @@ class JoshuaScript
       @ast.fetch key
     end
 
+    def []=(key, value)
+      @ast[key] = value
+    end
+
     alias fetch []
 
     # "open for extension, closed for modification" you can't extend pp
@@ -48,7 +52,7 @@ class JoshuaScript
       max_key_len = 0  # for key alignment
 
       children = @ast.reject do |k|
-        k == :type || k == :loc
+        k == :type || k == :loc || k == :scope
       end
 
       # inspect the children
