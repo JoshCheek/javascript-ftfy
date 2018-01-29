@@ -108,7 +108,7 @@ RSpec.describe 'The Interpreter' do
     JS
   end
 
-  describe 'builtin functions' do
+  describe 'custom functions' do
     specify 'showTime() prints the line number and the time' do
       result = js! <<~JS
       showTime()
@@ -130,6 +130,19 @@ RSpec.describe 'The Interpreter' do
       lineno, version = result.printed_json
       expect(lineno).to eq 1
       expect(version).to match /joshua.*script/i
+    end
+  end
+
+  describe 'existing context' do
+    describe 'console.log()' do
+      # maybe specify what happens when you pass it non-string args?
+
+      it 'prints the line number the call came from, and the inspected text' do
+        result = js! 'console.log("hello world")'
+        lineno, version = result.printed_json
+        expect(lineno).to eq 1
+        expect(version).to match "hello world"
+      end
     end
   end
 end

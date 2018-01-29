@@ -25,6 +25,9 @@ class JoshuaScript
       'showTime'    => method(:show_time),
       'setTimeout'  => method(:set_timeout),
       'showVersion' => method(:show_version),
+      'console'     => {
+        'log' => method(:console_log),
+      },
     }
   end
 
@@ -180,6 +183,11 @@ class JoshuaScript
     line = ast.fetch(:loc).fetch(:end).fetch(:line)
     time = ((Time.now - @start)*1000).to_i.to_s + ' ms'
     @stdout.puts "[#{line}, #{time.inspect}]"
+  end
+
+  def console_log(to_log, ast:, **)
+    line = ast.fetch(:loc).fetch(:end).fetch(:line)
+    @stdout.puts "[#{line}, #{to_log.inspect}]"
   end
 
   def invoke(ast, vars, invokable, args)
