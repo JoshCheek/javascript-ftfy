@@ -144,7 +144,7 @@ class JoshuaScript
       object = evaluate ast[:object], vars
       prop   = evaluate ast[:property], vars, identifier: :to_s
       object[prop]
-    when 'IfStatement'
+    when 'IfStatement', 'ConditionalExpression'
       test = evaluate ast[:test], vars
       if test
         evaluate ast[:consequent], vars

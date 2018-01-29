@@ -113,6 +113,11 @@ RSpec.describe 'The Interpreter' do
     JS
   end
 
+  it 'has those terminals!' do
+    js! '(a => a ? 1 : 2)(true)', result: 1
+    js! '(a => a ? 1 : 2)(false)', result: 2
+  end
+
   it 'can look up values from objects' do
     js! <<~JS, result: 1+2+3
       var a = 1, obj = {a: 2, b: 3}
