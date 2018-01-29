@@ -101,6 +101,18 @@ RSpec.describe 'The Interpreter' do
     JS
   end
 
+  it 'has the if statements, y\'all' do
+    js! <<~JS, result: [1, 2, 1, nil]
+      // TODO: Why does this need fkn blocks around the branches?
+      var a, b, c, d
+      if (true)  { a = 1 } else { a = 2 }
+      if (false) { b = 1 } else { b = 2 }
+      if (true)  { c = 1 }
+      if (false) { d = 1 }
+      ;[a, b, c, d]
+    JS
+  end
+
   it 'can look up values from objects' do
     js! <<~JS, result: 1+2+3
       var a = 1, obj = {a: 2, b: 3}

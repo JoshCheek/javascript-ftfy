@@ -58,6 +58,8 @@ class JoshuaScript
   # If this was for real, I'd transform their AST into my own internal
   # representation, but this is really just a thought experiment, so whatevz.
   def evaluate(ast, vars, identifier: :resolve)
+    return ast unless ast
+
     if ast.respond_to? :call
       return invoke(ast, vars, ast, [])
     end
@@ -142,6 +144,13 @@ class JoshuaScript
       object = evaluate ast[:object], vars
       prop   = evaluate ast[:property], vars, identifier: :to_s
       object[prop]
+    when 'IfStatement'
+      test = evaluate ast[:test], vars
+      if test
+        evaluate ast[:consequent], vars
+      else
+        evaluate ast[:alternate], vars
+      end
     else
       require "pry"
       binding.pry
@@ -155,7 +164,7 @@ class JoshuaScript
   end
 
   private def find_scope(vars, name)
-    vars.reverse_each.find { |scope| scope[name] }
+    vars.reverse_each.find { |scope| scope.key? name }
   end
 
   private def get_line(ast)
