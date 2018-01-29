@@ -66,7 +66,7 @@ class JoshuaScript
     when 'Identifier'
       id = ast.fetch :name
       if identifier == :resolve
-        scope = vars.reverse_each.find { |scope| scope[id] }
+        scope = find_scope vars, id
         scope[id]
       else
         id
@@ -110,6 +110,11 @@ class JoshuaScript
       name  = ast.fetch(:id).fetch(:name)
       value = evaluate ast.fetch(:init), vars
       vars.last[name] = value
+    when 'AssignmentExpression'
+      name  = evaluate ast.fetch(:left), vars, identifier: :to_string
+      value = evaluate ast.fetch(:right), vars
+      scope = find_scope vars, name
+      scope[name] = value
     when 'ArrowFunctionExpression', 'FunctionExpression'
       ast[:scope] = vars.dup
       ast
@@ -185,6 +190,10 @@ class JoshuaScript
       vars.pop
       result
     end
+  end
+
+  def find_scope(vars, name)
+    vars.reverse_each.find { |scope| scope[name] }
   end
 
 end

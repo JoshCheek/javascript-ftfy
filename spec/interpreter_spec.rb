@@ -48,6 +48,22 @@ RSpec.describe 'The Interpreter' do
     JS
   end
 
+  it 'sets variables in the scope they were defined' do
+    js! <<~JS, result: [1, 12, 3]
+    var a = 1,
+        b = a => {
+          a = a + 10
+          return a
+        },
+        c = d => a = d
+    var aPre = a
+    var aFromB = b(2)
+    c(3)
+    var aPost = a
+    ;[aPre, aFromB, aPost]
+    JS
+  end
+
   it 'can see variables across function scopes' do
     js! <<~JS, result: 2+3+4+5+6
       var a = 2
@@ -59,14 +75,6 @@ RSpec.describe 'The Interpreter' do
         }
       }
       f1(5)(6)
-    JS
-  end
-
-  xit 'scopes variables by function' do
-    js! <<~JS, result: idk
-    var a = 1,
-        b = a => a,
-        c = d => a = d
     JS
   end
 
