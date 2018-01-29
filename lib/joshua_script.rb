@@ -4,6 +4,9 @@ require 'open3'
 require 'continuation'
 require 'joshua_script/ast'
 
+# TODO:
+# * Switch from continuations to fibers
+# * make vars fiber local so we don't have to pass them through every call to evaluate
 
 class JoshuaScript
   ESPARSE = File.expand_path "../node_modules/.bin/esparse", __dir__
