@@ -155,6 +155,10 @@ class JoshuaScript
     vars.reverse_each.find { |scope| scope[name] }
   end
 
+  private def get_line(ast)
+    ast.fetch(:loc).fetch(:end).fetch(:line)
+  end
+
   private def invoke(ast, vars, invokable, args)
     if invokable.respond_to? :call
       keywords = {}
@@ -203,19 +207,15 @@ class JoshuaScript
   end
 
   def show_version(ast:, **)
-    line = ast.fetch(:loc).fetch(:end).fetch(:line)
-    @stdout.puts "[#{line}, \"\\\"JavaScript\\\" version l.o.l aka \\\"JoshuaScript\\\" aka \\\"JS... FTFY\\\"\"]"
+    @stdout.puts "[#{get_line ast}, \"\\\"JavaScript\\\" version l.o.l aka \\\"JoshuaScript\\\" aka \\\"JS... FTFY\\\"\"]"
   end
 
   def show_time(ast:, **)
-    line = ast.fetch(:loc).fetch(:end).fetch(:line)
     time = ((Time.now - @start)*1000).to_i.to_s + ' ms'
-    @stdout.puts "[#{line}, #{time.inspect}]"
+    @stdout.puts "[#{get_line ast}, #{time.inspect}]"
   end
 
   def console_log(to_log, ast:, **)
-    line = ast.fetch(:loc).fetch(:end).fetch(:line)
-    @stdout.puts "[#{line}, #{to_log.inspect}]"
+    @stdout.puts "[#{get_line ast}, #{to_log.inspect}]"
   end
-
 end
