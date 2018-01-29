@@ -65,12 +65,6 @@ class JoshuaScript
     case ast.fetch :type
     when 'Program'
       ast.fetch(:body).map { |child| evaluate child, vars }.last
-    when 'Invooooooooke!' # FIXME: should just be CallExpression?
-      code = ast.fetch :code
-      params = code.fetch :params
-      not_implemented if params.any?
-      body = code.fetch(:body)
-      evaluate body, vars
     when 'Identifier'
       id = ast.fetch :name
       if identifier == :resolve
@@ -83,6 +77,12 @@ class JoshuaScript
     when 'ExpressionStatement'
       expr = ast.fetch(:expression)
       evaluate expr, vars
+    when 'Invooooooooke!' # FIXME: should just be CallExpression?
+      code = ast.fetch :code
+      params = code.fetch :params
+      not_implemented if params.any?
+      body = code.fetch(:body)
+      evaluate body, vars
     when 'CallExpression'
       method = evaluate ast.fetch(:callee), vars
       args   = ast.fetch(:arguments).map { |arg| evaluate arg, vars }
