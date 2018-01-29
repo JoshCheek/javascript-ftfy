@@ -8,4 +8,4 @@ begin
 rescue Errno::ENXIO
   # device not configured for tty
 end
-JoshuaScript.eval program
+JoshuaScript.eval program, stdout: $stdout

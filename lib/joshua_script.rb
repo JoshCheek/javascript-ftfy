@@ -8,16 +8,17 @@ require 'joshua_script/ast'
 class JoshuaScript
   ESPARSE = File.expand_path "../node_modules/.bin/esparse", __dir__
 
-  def self.eval(js)
+  def self.eval(js, stdout:)
     out, err, status = Open3.capture3(ESPARSE, '--loc', stdin_data: js)
     raise err unless status.success?
     ast = JSON.parse out, symbolize_names: true
-    js = new
+    js = new stdout: stdout
     js.enqueue Ast.new(ast)
     js.run
   end
 
-  def initialize
+  def initialize(stdout:)
+    @stdout  = stdout
     @workers = []
     @queue   = Queue.new
     @globals = {
@@ -168,7 +169,7 @@ class JoshuaScript
   def show_time(ast:, **)
     line = ast.fetch(:loc).fetch(:end).fetch(:line)
     time = ((Time.now - @start)*1000).to_i.to_s + ' ms'
-    puts "[#{line}, #{time.inspect}]"
+    @stdout.puts "[#{line}, #{time.inspect}]"
   end
 
   def invoke(ast, vars, invokable, args)

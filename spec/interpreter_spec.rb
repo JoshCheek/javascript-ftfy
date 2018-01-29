@@ -1,9 +1,26 @@
 require 'joshua_script'
+require 'json'
+
+class Result
+  attr_accessor :result, :printed
+  def initialize(result:, printed:)
+    self.result = result
+    self.printed = printed
+  end
+
+  def printed_jsons
+    printed.lines.map { |line| JSON.parse line }
+  end
+end
 
 RSpec.describe 'The Interpreter' do
-  def js!(code, result:)
-    actual = JoshuaScript.eval(code)
-    expect(actual).to eq result
+  def js!(code, result: :undefined)
+    stdout = StringIO.new
+    actual = JoshuaScript.eval(code, stdout: stdout)
+    if result != :undefined
+      expect(actual).to eq result
+    end
+    Result.new result: actual, printed: stdout.string
   end
 
   it 'interprets empty files' do
@@ -81,5 +98,23 @@ RSpec.describe 'The Interpreter' do
   describe 'console.log' do
     it 'prints the line number the call came from, and the inspected text'
     # maybe what happens when you pass it non-string args
+  end
+
+  describe 'builtin functions', t:true do
+    specify 'showTime() prints the line number and the time' do
+      result = js! <<~JS
+      showTime()
+
+      setTimeout(() => showTime(), 100)
+      showTime()
+      JS
+      times = result.printed_jsons
+      expect(times.length).to eq 3
+      linenos, printeds = times.transpose
+      expect(linenos).to eq [1, 4, 3]
+      expect(printeds[0]).to eq '0 ms'
+      expect(printeds[1]).to eq '0 ms'
+      expect(printeds[2]).to match /10\d ms/
+    end
   end
 end
