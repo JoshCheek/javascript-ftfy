@@ -11,6 +11,12 @@ class Result
   def printed_jsons
     printed.lines.map { |line| JSON.parse line }
   end
+
+  def printed_json
+    jsons = printed_jsons
+    raise "Expected one output! #{jsons.inspect}" unless jsons.length == 1
+    jsons.first
+  end
 end
 
 RSpec.describe 'The Interpreter' do
@@ -100,7 +106,7 @@ RSpec.describe 'The Interpreter' do
     # maybe what happens when you pass it non-string args
   end
 
-  describe 'builtin functions', t:true do
+  describe 'builtin functions' do
     specify 'showTime() prints the line number and the time' do
       result = js! <<~JS
       showTime()
@@ -115,6 +121,13 @@ RSpec.describe 'The Interpreter' do
       expect(printeds[0]).to eq '0 ms'
       expect(printeds[1]).to eq '0 ms'
       expect(printeds[2]).to match /10\d ms/
+    end
+
+    specify 'showVersion() prints the lineno and something amusing' do
+      result = js! 'showVersion()'
+      lineno, version = result.printed_json
+      expect(lineno).to eq 1
+      expect(version).to match /joshua.*script/i
     end
   end
 end

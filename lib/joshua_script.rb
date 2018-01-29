@@ -22,8 +22,9 @@ class JoshuaScript
     @workers = []
     @queue   = Queue.new
     @globals = {
-      'showTime'   => method(:show_time),
-      'setTimeout' => method(:set_timeout),
+      'showTime'    => method(:show_time),
+      'setTimeout'  => method(:set_timeout),
+      'showVersion' => method(:show_version),
     }
   end
 
@@ -68,6 +69,7 @@ class JoshuaScript
       id = ast.fetch :name
       if identifier == :resolve
         scope = find_scope vars, id
+        raise "Undefined: #{id}" if !scope # FIXME: untested temp(?) hack
         scope[id]
       else
         id
@@ -140,7 +142,6 @@ class JoshuaScript
   # Have to take empty kwargs here b/c Ruby has a bug.
   # I reported it here: https://bugs.ruby-lang.org/issues/14415
   def set_timeout(cb=nil, ms, **)
-    # pp cb
     cb &&= {type: 'Invooooooooke!', code: cb}
 
     timeout = lambda do |code|
@@ -164,6 +165,11 @@ class JoshuaScript
 
   def not_implemented
     raise NotImplementedError, 'lol not even implemented', caller
+  end
+
+  def show_version(ast:, **)
+    line = ast.fetch(:loc).fetch(:end).fetch(:line)
+    @stdout.puts "[#{line}, \"\\\"JavaScript\\\" version l.o.l aka \\\"JoshuaScript\\\" aka \\\"JS... FTFY\\\"\"]"
   end
 
   def show_time(ast:, **)
