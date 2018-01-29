@@ -146,6 +146,38 @@ class JoshuaScript
   end
 
 
+  # ===== Helpers ======
+  private def not_implemented
+    raise NotImplementedError, 'lol not even implemented', caller
+  end
+
+  private def find_scope(vars, name)
+    vars.reverse_each.find { |scope| scope[name] }
+  end
+
+  private def invoke(ast, vars, invokable, args)
+    if invokable.respond_to? :call
+      keywords = {}
+      params   = []
+      params   = invokable.parameters if invokable.respond_to? :parameters
+      keywords[:ast] = ast if params.include? [:keyreq, :ast]
+      invokable.call *args, **keywords
+    else
+      body    = invokable[:body]
+      context = invokable[:params]
+                  .map { |param| evaluate param, vars, identifier: :to_string }
+                  .zip(args)
+                  .to_h
+      fn_scope = invokable[:scope]
+      vars = [*fn_scope, context]
+      result = evaluate body, vars
+      vars.pop
+      result
+    end
+  end
+
+  # ===== Native Functions =====
+
   # Have to take empty kwargs here b/c Ruby has a bug.
   # I reported it here: https://bugs.ruby-lang.org/issues/14415
   def set_timeout(cb=nil, ms, **)
@@ -170,10 +202,6 @@ class JoshuaScript
     end
   end
 
-  def not_implemented
-    raise NotImplementedError, 'lol not even implemented', caller
-  end
-
   def show_version(ast:, **)
     line = ast.fetch(:loc).fetch(:end).fetch(:line)
     @stdout.puts "[#{line}, \"\\\"JavaScript\\\" version l.o.l aka \\\"JoshuaScript\\\" aka \\\"JS... FTFY\\\"\"]"
@@ -188,31 +216,6 @@ class JoshuaScript
   def console_log(to_log, ast:, **)
     line = ast.fetch(:loc).fetch(:end).fetch(:line)
     @stdout.puts "[#{line}, #{to_log.inspect}]"
-  end
-
-  def invoke(ast, vars, invokable, args)
-    if invokable.respond_to? :call
-      keywords = {}
-      params   = []
-      params   = invokable.parameters if invokable.respond_to? :parameters
-      keywords[:ast] = ast if params.include? [:keyreq, :ast]
-      invokable.call *args, **keywords
-    else
-      body    = invokable[:body]
-      context = invokable[:params]
-                  .map { |param| evaluate param, vars, identifier: :to_string }
-                  .zip(args)
-                  .to_h
-      fn_scope = invokable[:scope]
-      vars = [*fn_scope, context]
-      result = evaluate body, vars
-      vars.pop
-      result
-    end
-  end
-
-  def find_scope(vars, name)
-    vars.reverse_each.find { |scope| scope[name] }
   end
 
 end
