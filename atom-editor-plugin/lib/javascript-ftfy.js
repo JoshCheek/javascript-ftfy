@@ -9,7 +9,8 @@ export default {
   activate(state) {
     this.subscriptions = new CompositeDisposable()
     this.subscriptions.add(atom.commands.add('atom-workspace', {
-      'JavaScript FTFY:annotate-document': () => this.annotate()
+      'JavaScript FTFY:annotate-document': () => this.annotate(),
+      'JavaScript FTFY:clear-annotations': () => this.clear(),
     }))
   },
 
@@ -44,5 +45,11 @@ export default {
     })
     js.stdin.write(editor.getText())
     js.stdin.end()
+  },
+
+  clear() {
+    const editor = atom.workspace.getActiveTextEditor()
+    const buffer = editor.buffer
+    buffer && buffer.replace(/ *\/\/ => .*$/g, '')
   },
 }
