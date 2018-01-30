@@ -55,66 +55,56 @@ class JoshuaScript
   def evaluate(ast, vars, identifier: :resolve)
     return ast unless ast
 
+    # it's an internal method: a block, method, or continuation
     if ast.respond_to? :call
-      return invoke(ast, vars, ast, [])
+      return invoke(ast, vars, [], ast: ast)
     end
 
-    case ast.fetch :type
+    case ast[:type]
     when 'Program'
-      ast.fetch(:body).map { |child| evaluate child, vars }.last
+      ast[:body].map { |child| evaluate child, vars }.last
     when 'Identifier'
-      id = ast.fetch :name
+      name = ast[:name]
       if identifier == :resolve
-        scope = find_scope vars, id
-        raise "Undefined: #{id}" if !scope # FIXME: untested temp(?) hack
-        scope[id]
+        scope = find_scope vars, name
+        raise "Undefined: #{name}" if !scope # FIXME: untested temp(?) hack
+        scope[name]
       else
-        id
+        name
       end
     when 'ExpressionStatement'
-      expr = ast.fetch(:expression)
-      evaluate expr, vars
+      evaluate ast[:expression], vars
     when 'Invooooooooke!' # FIXME: should just be CallExpression?
-      code = ast.fetch :code
-      params = code.fetch :params
-      not_implemented if params.any?
-      body = code.fetch(:body)
-      evaluate body, vars
+      not_implemented if ast[:code][:params].any?
+      evaluate ast[:code][:body], vars
     when 'CallExpression'
-      method = evaluate ast.fetch(:callee), vars
-      args   = ast.fetch(:arguments).map { |arg| evaluate arg, vars }
-      invoke ast, vars, method, args
-
+      method = evaluate ast[:callee], vars
+      args   = ast[:arguments].map { |arg| evaluate arg, vars }
+      invoke method, vars, args, ast: ast
     when 'Literal'
       value = ast.fetch :value
       value = value.to_f if value.kind_of? Integer
       value
     when 'BlockStatement'
-      body = ast.fetch :body
-      body.map { |child| evaluate child, vars }.last
+      ast[:body].map { |child| evaluate child, vars }.last
     when 'ArrayExpression'
       ast.fetch(:elements).map { |child| evaluate child, vars }
     when 'ObjectExpression'
-      ast.fetch(:properties).each_with_object({}) do |prop, obj|
-        key = prop.fetch(:key)
-        if key.fetch(:type) == "Identifier"
-          key = key.fetch(:name)
-        else
-          key = key.fetch(:value)
-        end
-        value = evaluate prop.fetch(:value), vars
+      ast[:properties].each_with_object({}) do |prop, obj|
+        key   = evaluate prop[:key],   vars, identifier: :to_s
+        value = evaluate prop[:value], vars
         obj[key] = value
       end
     when 'BinaryExpression'
-      operator = ast.fetch :operator
-      left     = evaluate ast.fetch(:left), vars
-      right    = evaluate ast.fetch(:right), vars
+      operator = ast[:operator]
+      left     = evaluate ast[:left], vars
+      right    = evaluate ast[:right], vars
       left.send operator, right
     when 'VariableDeclaration'
-      ast.fetch(:declarations).each { |dec| evaluate dec, vars }
+      ast[:declarations].each { |dec| evaluate dec, vars }
     when 'VariableDeclarator'
-      name  = ast.fetch(:id).fetch(:name)
-      value = evaluate ast.fetch(:init), vars
+      name  = ast[:id][:name]
+      value = evaluate ast[:init], vars
       vars.last[name] = value
     when 'AssignmentExpression'
       name  = evaluate ast.fetch(:left), vars, identifier: :to_string
@@ -122,18 +112,19 @@ class JoshuaScript
       scope = find_scope vars, name
       scope[name] = value
     when 'ArrowFunctionExpression', 'FunctionExpression'
-      ast[:scope] = vars.dup
+      ast[:scope] = vars.dup # make it a closure
       ast
     when 'FunctionDeclaration'
-      ast[:scope] = vars.dup
-      name = ast.fetch :id
+      ast[:scope] = vars.dup # this is why it's a closure
+      name = ast[:id]
       name = evaluate name, vars, identifier: :to_s if name
       vars.last[name] = ast
       ast
     when 'EmptyStatement' # I think it's from a semicolon on its own line
       nil
     when 'ReturnStatement'
-      # FIXME: need a way to bail on the fn if we want to return
+      # FIXME: need a way to bail on the fn if we want to return early
+      # right now it only works b/c the return statements are the last line
       evaluate ast[:argument], vars
     when 'MemberExpression'
       object = evaluate ast[:object], vars
@@ -166,24 +157,16 @@ class JoshuaScript
     ast.fetch(:loc).fetch(:end).fetch(:line)
   end
 
-  private def invoke(ast, vars, invokable, args)
+  private def invoke(invokable, vars, args, ast: ast)
     if invokable.respond_to? :call
-      keywords = {}
-      params   = []
-      params   = invokable.parameters if invokable.respond_to? :parameters
-      keywords[:ast] = ast if params.include? [:keyreq, :ast]
-      invokable.call *args, **keywords
+      invokable.call *args, ast: ast
     else
-      body    = invokable[:body]
-      context = invokable[:params]
-                  .map { |param| evaluate param, vars, identifier: :to_string }
-                  .zip(args)
-                  .to_h
-      fn_scope = invokable[:scope]
-      vars = [*fn_scope, context]
-      result = evaluate body, vars
-      vars.pop
-      result
+      evaluate invokable[:body], [
+        *invokable[:scope],
+        invokable[:params]
+          .map { |param| evaluate param, vars, identifier: :to_string }
+          .zip(args)
+          .to_h]
     end
   end
 
