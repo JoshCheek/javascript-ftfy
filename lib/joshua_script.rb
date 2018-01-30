@@ -63,6 +63,7 @@ class JoshuaScript
     case ast[:type]
     when 'Program'
       ast[:body].map { |child| evaluate child, vars }.last
+
     when 'Identifier'
       name = ast[:name]
       if identifier == :resolve
@@ -72,64 +73,81 @@ class JoshuaScript
       else
         name
       end
+
     when 'ExpressionStatement'
       evaluate ast[:expression], vars
+
     when 'Invooooooooke!' # FIXME: should just be CallExpression?
       not_implemented if ast[:code][:params].any?
       evaluate ast[:code][:body], vars
+
     when 'CallExpression'
       method = evaluate ast[:callee], vars
       args   = ast[:arguments].map { |arg| evaluate arg, vars }
       invoke method, vars, args, ast: ast
+
     when 'Literal'
       value = ast.fetch :value
       value = value.to_f if value.kind_of? Integer
       value
+
     when 'BlockStatement'
       ast[:body].map { |child| evaluate child, vars }.last
+
     when 'ArrayExpression'
       ast.fetch(:elements).map { |child| evaluate child, vars }
+
     when 'ObjectExpression'
       ast[:properties].each_with_object({}) do |prop, obj|
         key   = evaluate prop[:key],   vars, identifier: :to_s
         value = evaluate prop[:value], vars
         obj[key] = value
       end
+
     when 'BinaryExpression'
       operator = ast[:operator]
       left     = evaluate ast[:left], vars
       right    = evaluate ast[:right], vars
       left.send operator, right
+
     when 'VariableDeclaration'
       ast[:declarations].each { |dec| evaluate dec, vars }
+
     when 'VariableDeclarator'
       name  = ast[:id][:name]
       value = evaluate ast[:init], vars
       vars.last[name] = value
+
     when 'AssignmentExpression'
       name  = evaluate ast.fetch(:left), vars, identifier: :to_string
       value = evaluate ast.fetch(:right), vars
       scope = find_scope vars, name
       scope[name] = value
+
     when 'ArrowFunctionExpression', 'FunctionExpression'
       ast[:scope] = vars.dup # make it a closure
       ast
+
     when 'FunctionDeclaration'
       ast[:scope] = vars.dup # this is why it's a closure
       name = ast[:id]
       name = evaluate name, vars, identifier: :to_s if name
       vars.last[name] = ast
       ast
+
     when 'EmptyStatement' # I think it's from a semicolon on its own line
       nil
+
     when 'ReturnStatement'
       # FIXME: need a way to bail on the fn if we want to return early
       # right now it only works b/c the return statements are the last line
       evaluate ast[:argument], vars
+
     when 'MemberExpression'
       object = evaluate ast[:object], vars
       prop   = evaluate ast[:property], vars, identifier: :to_s
       object[prop]
+
     when 'IfStatement', 'ConditionalExpression'
       test = evaluate ast[:test], vars
       if test
@@ -137,6 +155,7 @@ class JoshuaScript
       else
         evaluate ast[:alternate], vars
       end
+
     else
       require "pry"
       binding.pry
