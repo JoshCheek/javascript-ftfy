@@ -31,15 +31,19 @@ export default {
     js.stderr.on('data', output => stderr += output)
     js.on('close', status => {
       buffer.replace(/ *\/\/ => .*$/g, '')
-      if (status == 0)
+      if (status == 0) {
+        const seen = []
         stdout.split("\n")
               .filter(line => line.length)
               .map(line => JSON.parse(line))
               .forEach(([lineno, result]) => {
                  const rowno = lineno-1
                  const colno = buffer.lineLengthForRow(rowno)
-                 buffer.insert(new Point(rowno, colno), `  // => ${result}`)
+                 const text  = seen[rowno] ? `, ${result}` : `  // => ${result}`
+                 seen[rowno] = true
+                 buffer.insert(new Point(rowno, colno), text)
               })
+      }
       else
         atom.notifications.addError(stderr) // to persist the errors, add: {dismissable: true}
     })
