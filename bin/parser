@@ -7,20 +7,26 @@ const path       = require('path')
 const fs         = require('fs')
 
 // setup
-let server
-const app = express()
+const doLog    = process.stdout.isTTY
+const lifetime = 1000 * 60 * 30
+const portfile = path.resolve(__dirname, '..', 'tmp', 'port')
+const app      = express()
 app.use(bodyParser.text({type: 'text/plain'}))
+
+let server
 
 // this should be GET, but you can't send a body in a GET request -.^
 app.post('/parse', (req, res) => {
   const javascript = req.body
   const ast = esprima.parse(javascript, {loc: true})
-  const json = JSON.stringify(ast)
-  res.send(json)
-  console.log("=====  REQUEST =====")
-  console.log(req.body)
-  console.log("=====  RESPONSE =====")
-  console.log(json)
+  const jsonAst = JSON.stringify(ast)
+  res.send(jsonAst)
+  if (doLog) {
+    console.log("=====  REQUEST =====")
+    console.log(req.body)
+    console.log("=====  RESPONSE =====")
+    console.log(jsonAst)
+  }
 })
 
 function closeServer() {
@@ -29,14 +35,11 @@ function closeServer() {
 app.post('/close', closeServer)
 app.get('/close', closeServer)
 
-const lifetime = 1000 * 60 * 10 // 10 min
-const portfile = path.resolve(__dirname, '..', 'log', 'port')
 server = app.listen(0, () => {
   const port = server.address().port
-  console.log(`Parser listening on ${port}`)
+  doLog && console.log(`Parser listening on ${port}`)
   fs.writeFile(portfile, port, err => {
     err && process.stderr.write(err, 'utf-8', ()=>{}) && closeServer()
   })
   setTimeout(closeServer, lifetime)
 })
-

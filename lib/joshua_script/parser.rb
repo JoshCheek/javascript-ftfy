@@ -4,9 +4,7 @@ require 'open3'
 class JoshuaScript
   module Parser
     BIN_DIR  = File.expand_path '../../bin', __dir__
-    LOG_DIR  = File.expand_path '../../log', __dir__
-    OUT_LOG  = File.join LOG_DIR, 'out.log'
-    ERR_LOG  = File.join LOG_DIR, 'err.log'
+    LOG_DIR  = File.expand_path '../../tmp', __dir__
     PORTFILE = File.join LOG_DIR, 'port'
 
     require 'net/http'
@@ -16,12 +14,11 @@ class JoshuaScript
       http         = Net::HTTP.new 'localhost', Parser.port
       request      = Net::HTTP::Post.new '/parse', 'Content-Type' => 'text/plain'
       request.body = js
-      response     = nil
-      response   = http.request request
-      raw        = response.body
-      json       = JSON.parse raw, symbolize_names: true
+      response     = http.request request
+      json         = JSON.parse response.body, symbolize_names: true
       JoshuaScript::Ast.new json
-    rescue Errno::ECONNREFUSED # port file exists, but server isn't on that port  # =>
+    rescue Errno::ECONNREFUSED, # port file exists, but server isn't on that port
+           Errno::EADDRNOTAVAIL # not sure
       raise unless first_time
       Parser.start_server
       return parse(js, false)
@@ -37,19 +34,17 @@ class JoshuaScript
 
     def self.start_server
       Dir.mkdir LOG_DIR unless Dir.exist? LOG_DIR
-      out = File.open OUT_LOG, 'w'
-      err = File.open ERR_LOG, 'w'
       start_time = Time.now
-      spawn File.join(BIN_DIR, 'parser'), in: :close, out: out, err: err
+      write = File.open '/dev/null' # I think there's an OS indifferent way to do this, but can't remember what it is
+      spawn File.join(BIN_DIR, 'parser'), in: :close, out: write
       loop do
         next sleep 0.01 unless File.exist? PORTFILE
-        next sleep 0.01 unless start_time < File.stat(PORTFILE).mtime
+        next sleep 0.01 unless start_time < File.mtime(PORTFILE)
         break
       end
       self.port = File.read(PORTFILE).to_i
     ensure
-      out && out.close
-      err && err.close
+      write && write.close
     end
   end
 end
