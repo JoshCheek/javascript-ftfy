@@ -176,7 +176,7 @@ class JoshuaScript
     ast.fetch(:loc).fetch(:end).fetch(:line)
   end
 
-  private def invoke(invokable, vars, args, ast: ast)
+  private def invoke(invokable, vars, args, ast:)
     if invokable.respond_to? :call
       invokable.call *args, ast: ast
     else
