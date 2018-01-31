@@ -156,6 +156,27 @@ class JoshuaScript
         evaluate ast[:alternate], vars
       end
 
+    when 'UpdateExpression'
+      name  = evaluate ast[:argument], vars, identifier: :to_s
+      scope = find_scope vars, name
+      if ast[:prefix]
+        if ast[:operator] == "--"
+          scope[name] = scope[name] - 1
+        else
+          scope[name] = scope[name] + 1
+        end
+      else
+        if ast[:operator] == "--"
+          value = scope[name]
+          scope[name] = scope[name] - 1
+          value
+        else
+          value = scope[name]
+          scope[name] = scope[name] + 1
+          value
+        end
+      end
+
     else
       require "pry"
       binding.pry

@@ -52,6 +52,35 @@ RSpec.describe 'The Interpreter' do
         result: [12, 8, 20, 5, 1, 2, 0, "abcd"]
   end
 
+  it 'can compare numbers' do
+    code = <<~JS
+      [1<2,  2<1,  2<2,
+       1<=2, 2<=1, 2<=2,
+       1>=2, 2>=1, 2>=2,
+       1>2,  2>1,  2>2,
+       1==2, 2==1, 2==2]
+    JS
+    js! code, result: eval(code)
+  end
+
+  it 'can prefix/postfix increment and decrement', t:true do
+    js! <<~JS, result: [0,0,  0,1,  2,2,  2,1]
+      var a1 = 1
+      var a2 = --a1
+
+      var b1 = 1
+      var b2 = b1--
+
+      var c1 = 1
+      var c2 = ++c1
+
+      var d1 = 1
+      var d2 = d1++
+
+      ;[a1, a2,  b1,b2,  c1,c2,  d1,d2]
+    JS
+  end
+
   it 'treats all numbers as floats' do
     js! '9/2', result: 4.5
   end
