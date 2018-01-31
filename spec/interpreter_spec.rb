@@ -225,5 +225,15 @@ RSpec.describe 'The Interpreter' do
         expect(time).to match /^1\d ms$/
       end
     end
+
+    describe 'Array.forEach' do
+      it 'passes each element to the cb' do
+        js! <<~JS, result: "abc"
+        var result = ""
+        ;["a", "b", "c"].forEach(e => result = result + e)
+        result
+        JS
+      end
+    end
   end
 end

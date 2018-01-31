@@ -146,11 +146,28 @@ class JoshuaScript
       object  = evaluate ast[:object], vars
       id_type = ast[:computed] ? :resolve : :to_s
       prop    = evaluate ast[:property], vars, identifier: id_type
+      # Hacky bs that allows us to get some useful functionality now,
+      # without implementing prototypes or `this`
       begin
         object[prop]
       rescue
-        # Hack that allows us to get array length. Real solution is prob to implement prototypes
-        object.send prop
+        if object.respond_to? prop
+          object.public_send prop
+        else
+          case object
+          when Array
+            case prop.intern
+            when :forEach
+              lambda do |cb, **|
+                object.each do |e|
+                  invoke cb, vars, [e], ast: ast
+                end
+              end
+            end
+          else
+            raise
+          end
+        end
       end
 
     when 'IfStatement', 'ConditionalExpression'
