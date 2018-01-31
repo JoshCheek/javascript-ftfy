@@ -5,6 +5,8 @@ A JS interpreter that uses continuations so that you can write synchronous code,
 as if you were in a language like Ruby or Python, but the code will still run
 asynchronously, without blocking.
 
+For an example, of what this means, check out [examples/sync-example.js](sync-example.js).
+
 
 How to use
 ----------

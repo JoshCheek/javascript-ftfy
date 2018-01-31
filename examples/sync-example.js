@@ -1,22 +1,27 @@
-var TASKS = [
+var task_list = [
   ["task 1.1", "task 1.2"],
   ["task 2"],
   ["task 3"],
 ]
 
-function forEach(array, cb) {
-  for(var i=0; i<array.length; ++i)
-    cb(array[i])
-}
+// These asynchronous task will run, b/c the synchronous code below is nonblocking
+setTimeout(showTime,  75)  // => 79 ms
+setTimeout(showTime, 150)  // => 155 ms
+setTimeout(showTime, 250)  // => 251 ms
 
-// this asynchronous task will run at ~75ms,
-// even though the synchronous code below will be waiting on
-setTimeout(showTime, 75)  // => 77 ms
+// A bunch of synchronous work that takes 200ms
+task_list.forEach(tasks =>
+  tasks.forEach(task => {
+    setTimeout(50) // represents async task work, eg IO
 
-forEach(TASKS, tasks =>
-  forEach(tasks, task => {
-    setTimeout(50) // represents some async work, such as IO
-    showTime()  // => 52 ms, 102 ms, 154 ms, 206 ms
+    showTime()  // => 51 ms, 102 ms, 155 ms, 209 ms
     console.log(task)  // => task 1.1, task 1.2, task 2, task 3
   })
 )
+
+// This comes after the synchronous task processing code, so its time is after.
+// But notice that this didn't block the thread, it was processing the timeouts
+// from earlier, even while waiting on the synchronous setTimeout for each task.
+//
+// In other words: the callstack was paused, but it did not block the event queue.
+showTime()  // => 209 ms
