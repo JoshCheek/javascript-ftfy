@@ -63,7 +63,7 @@ RSpec.describe 'The Interpreter' do
     js! code, result: eval(code)
   end
 
-  it 'can prefix/postfix increment and decrement', t:true do
+  it 'can prefix/postfix increment and decrement' do
     js! <<~JS, result: [0,0,  0,1,  2,2,  2,1]
       var a1 = 1
       var a2 = --a1

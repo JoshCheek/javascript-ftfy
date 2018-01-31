@@ -157,25 +157,12 @@ class JoshuaScript
       end
 
     when 'UpdateExpression'
-      name  = evaluate ast[:argument], vars, identifier: :to_s
-      scope = find_scope vars, name
-      if ast[:prefix]
-        if ast[:operator] == "--"
-          scope[name] = scope[name] - 1
-        else
-          scope[name] = scope[name] + 1
-        end
-      else
-        if ast[:operator] == "--"
-          value = scope[name]
-          scope[name] = scope[name] - 1
-          value
-        else
-          value = scope[name]
-          scope[name] = scope[name] + 1
-          value
-        end
-      end
+      name        = evaluate ast[:argument], vars, identifier: :to_s
+      scope       = find_scope vars, name
+      pre_value   = scope[name]
+      method      = ast[:operator][0] # plus or minus
+      scope[name] = scope[name].public_send(method, 1)
+      ast[:prefix] ? scope[name] : pre_value
 
     else
       require "pry"
