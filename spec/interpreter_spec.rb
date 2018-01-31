@@ -52,6 +52,14 @@ RSpec.describe 'The Interpreter' do
         result: [12, 8, 20, 5, 1, 2, 0, "abcd"]
   end
 
+  it 'treats all numbers as floats' do
+    js! '9/2', result: 4.5
+  end
+
+  it 'can set and get vars' do
+    js! 'var a = 1, b=2; a+b', result: 3
+  end
+
   it 'can compare numbers' do
     code = <<~JS
       [1<2,  2<1,  2<2,
@@ -81,12 +89,18 @@ RSpec.describe 'The Interpreter' do
     JS
   end
 
-  it 'treats all numbers as floats' do
-    js! '9/2', result: 4.5
+  it 'can access array elements by index' do
+    js! <<~JS, result: [300, 100, 200, 100]
+      var ary = [100, 200, 300]
+      var i = 0
+      ;[ary[2], ary[0], ary[1], ary[i]]
+    JS
   end
 
-  it 'can set and get vars' do
-    js! 'var a = 1, b=2; a+b', result: 3
+  it 'knows the length of arrays' do
+    js! <<~JS, result: 3
+      [100, 200, 300].length
+    JS
   end
 
   it 'can create and call functions' do

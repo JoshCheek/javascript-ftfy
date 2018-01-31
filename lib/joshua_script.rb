@@ -144,9 +144,15 @@ class JoshuaScript
       evaluate ast[:argument], vars
 
     when 'MemberExpression'
-      object = evaluate ast[:object], vars
-      prop   = evaluate ast[:property], vars, identifier: :to_s
-      object[prop]
+      object  = evaluate ast[:object], vars
+      id_type = ast[:computed] ? :resolve : :to_s
+      prop    = evaluate ast[:property], vars, identifier: id_type
+      begin
+        object[prop]
+      rescue
+        # Hack that allows us to get array length. Real solution is prob to implement prototypes
+        object.send prop
+      end
 
     when 'IfStatement', 'ConditionalExpression'
       test = evaluate ast[:test], vars
