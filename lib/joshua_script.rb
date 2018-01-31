@@ -77,9 +77,8 @@ class JoshuaScript
     when 'ExpressionStatement'
       evaluate ast[:expression], vars
 
-    when 'Invooooooooke!' # FIXME: should just be CallExpression?
-      not_implemented if ast[:code][:params].any?
-      evaluate ast[:code][:body], vars
+    when 'Invooooooooke!' # FIXME: this is an internal call, unify it w/ the others
+      invoke ast[:invokable], ast[:vars], ast[:args], ast: ast
 
     when 'CallExpression'
       method = evaluate ast[:callee], vars
@@ -215,8 +214,14 @@ class JoshuaScript
 
   # Have to take empty kwargs here b/c Ruby has a bug.
   # I reported it here: https://bugs.ruby-lang.org/issues/14415
-  def set_timeout(cb=nil, ms, **)
-    cb &&= {type: 'Invooooooooke!', code: cb}
+  def set_timeout(cb=nil, ms, ast:, **)
+    cb &&= {
+      type:      'Invooooooooke!',
+      invokable: cb,
+      vars:      [@globals],
+      args:      [],
+      loc:       ast.loc,
+    }
 
     timeout = lambda do |code|
       @workers << Thread.new do
@@ -241,7 +246,7 @@ class JoshuaScript
     @stdout.puts "[#{get_line ast}, \"\\\"JavaScript\\\" version l.o.l aka \\\"JoshuaScript\\\" aka \\\"JS... FTFY\\\"\"]"
   end
 
-  def show_time(ast:, **)
+  def show_time(*args, ast:, **)
     time = ((Time.now - @start)*1000).to_i.to_s + ' ms'
     @stdout.puts "[#{get_line ast}, #{time.inspect}]"
   end

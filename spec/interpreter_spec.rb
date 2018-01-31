@@ -214,4 +214,16 @@ RSpec.describe 'The Interpreter' do
       end
     end
   end
+
+
+  describe 'native functions' do
+    describe 'setTimeout' do
+      it 'waits about the specified length of time, and then calls the fn' do
+        result = js! 'setTimeout(showTime, 10)'
+        lineno, time = result.printed_json
+        expect(lineno).to eq 1
+        expect(time).to match /^1\d ms$/
+      end
+    end
+  end
 end
