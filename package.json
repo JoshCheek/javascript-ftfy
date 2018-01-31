@@ -1,0 +1,7 @@
+{
+    "dependencies": {
+        "esprima": "4.0.0",
+        "express": "4.16.2",
+        "body-parser": "1.18.2"
+    }
+}
