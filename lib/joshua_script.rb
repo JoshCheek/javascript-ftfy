@@ -170,6 +170,14 @@ class JoshuaScript
       scope[name] = scope[name].public_send(method, 1)
       ast[:prefix] ? scope[name] : pre_value
 
+    when 'ForStatement'
+      evaluate ast[:init], vars
+      loop do
+        break unless evaluate ast[:test], vars
+        evaluate ast[:body], vars
+        evaluate ast[:update], vars
+      end
+
     else
       require "pry"
       binding.pry

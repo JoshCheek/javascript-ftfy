@@ -103,6 +103,15 @@ RSpec.describe 'The Interpreter' do
     JS
   end
 
+  it 'has for-loops' do
+    js! <<~JS, result: 123
+    var n = 0
+    for(var i=0; i <= 3; ++i)
+      n = n * 10 + i
+    n
+    JS
+  end
+
   it 'can create and call functions' do
     js! <<~JS, result: [6, 9, 7, 27]
       var e = 100
