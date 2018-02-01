@@ -2,6 +2,7 @@
 import path from 'path'
 import { spawn } from 'child_process'
 import { CompositeDisposable, Point } from 'atom'
+import { createInterface } from 'readline'
 
 export default {
   subscriptions: null,
@@ -25,28 +26,24 @@ export default {
     if(!buffer) return
     const js_path = path.resolve(__dirname, '../../bin/joshuascript')
     const js = spawn(js_path)
-    let stdout = ''
-    let stderr = ''
-    js.stdout.on('data', output => stdout += output)
-    js.stderr.on('data', output => stderr += output)
-    js.on('close', status => {
-      buffer.replace(/ *\/\/ => .*$/g, '')
-      if (status == 0) {
-        const seen = []
-        stdout.split("\n")
-              .filter(line => line.length)
-              .map(line => JSON.parse(line))
-              .forEach(([lineno, result]) => {
-                 const rowno = lineno-1
-                 const colno = buffer.lineLengthForRow(rowno)
-                 const text  = seen[rowno] ? `, ${result}` : `  // => ${result}`
-                 seen[rowno] = true
-                 buffer.insert(new Point(rowno, colno), text)
-              })
-      }
-      else
-        atom.notifications.addError(stderr) // to persist the errors, add: {dismissable: true}
+    buffer.replace(/ *\/\/ => .*$/g, '')
+
+    const seen = []
+    const rl = createInterface({input: js.stdout})
+    rl.on('line', line => {
+      const [lineno, result] = JSON.parse(line)
+      const rowno = lineno-1
+      const colno = buffer.lineLengthForRow(rowno)
+      const text  = seen[rowno] ? `, ${result}` : `  // => ${result}`
+      seen[rowno] = true
+      buffer.insert(new Point(rowno, colno), text)
     })
+
+    let stderr = ''
+    js.stderr.on('data', output => stderr += output)
+    js.on('close', status =>
+      status && atom.notifications.addError(stderr) // to persist the errors, add: {dismissable: true}
+    )
     js.stdin.write(editor.getText())
     js.stdin.end()
   },
