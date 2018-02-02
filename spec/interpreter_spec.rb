@@ -2,9 +2,9 @@ require 'joshua_script'
 require 'json'
 
 class Result
-  attr_accessor :result, :printed
-  def initialize(result:, printed:)
-    self.result = result
+  attr_accessor :value, :printed
+  def initialize(value:, printed:)
+    self.value   = value
     self.printed = printed
   end
 
@@ -26,7 +26,7 @@ RSpec.describe 'The Interpreter' do
     if result != :undefined
       expect(actual).to eq result
     end
-    Result.new result: actual, printed: stdout.string
+    Result.new value: actual, printed: stdout.string
   end
 
   it 'interprets empty files' do
