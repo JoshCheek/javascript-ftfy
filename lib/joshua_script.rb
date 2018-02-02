@@ -1,9 +1,8 @@
-require 'continuation'
+require 'fiber'
 require 'joshua_script/ast'
 require 'joshua_script/parser'
 
 # TODO:
-# * Switch from continuations to fibers
 # * make vars fiber local so we don't have to pass them through every call to evaluate
 
 class JoshuaScript
@@ -37,12 +36,15 @@ class JoshuaScript
   def run
     @start = Time.now
     result = nil
-    # whenever pause is called, we will continue executing code from here
-    callcc { |continuation| @pause = continuation }
     loop do
       @workers.select! &:alive?
       break if @queue.empty? && @workers.empty?
-      result = evaluate @queue.shift, [@globals]
+      work = @queue.shift
+      if work.respond_to? :resume
+        work.resume
+      else
+        Fiber.new { result = evaluate work, [@globals] }.resume
+      end
     end
     result
   end
@@ -253,10 +255,8 @@ class JoshuaScript
     return timeout[cb] if cb
 
     # no callback, so pause execution until we timeout
-    callcc do |continuation|
-      timeout[continuation]
-      @pause.call
-    end
+    timeout[Fiber.current]
+    Fiber.yield
   end
 
   def show_version(ast:, **)
