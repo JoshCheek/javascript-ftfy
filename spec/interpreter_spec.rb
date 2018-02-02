@@ -177,6 +177,41 @@ RSpec.describe 'The Interpreter' do
     JS
   end
 
+
+  xdescribe 'this' do
+    it 'is set to the global object by default' do
+      result = js! 'this'
+      expect(result.value).to eq result.global
+    end
+
+    it 'is set to the object that a method was called on' do
+      result = js! <<~JS
+      var a = {fn: function() { return this }}
+      ;[a, a.fn()]
+      JS
+      a, this = result.value
+      expect(this).to eq a
+      expect(this).to_not eq result.global
+    end
+
+    it 'is bound to the existing this, when the function was a fat arrow' do
+      result = js! <<~JS
+      var a = {fn: () => this}
+      a.fn()
+      JS
+      expect(result.value).to eq result.global
+    end
+
+    it 'is set to the global object within a non-method' do
+      result = js! <<~JS
+      var a = {fn: function() { return this }}
+      var fn = a.fn
+      fn()
+      JS
+      expect(result.value).to eq result.global
+    end
+  end
+
   describe 'custom functions' do
     specify 'showTime() prints the line number and the time' do
       result = js! <<~JS
