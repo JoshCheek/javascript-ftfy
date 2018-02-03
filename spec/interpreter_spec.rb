@@ -25,10 +25,10 @@ class Result
 end
 
 RSpec.describe 'The Interpreter' do
-  def js!(code, result: :undefined)
+  def js!(code, print_every_line: false, result: :undefined)
     stdout = StringIO.new
     js     = JoshuaScript.new(stdout: stdout)
-    ast    = JoshuaScript::Parser.parse code
+    ast    = JoshuaScript::Parser.parse code, print_every_line: print_every_line
     js.enqueue ast
     actual = js.run
     if result != :undefined
@@ -254,6 +254,62 @@ RSpec.describe 'The Interpreter' do
       a.setX(123)
       a.x
       JS
+    end
+  end
+
+  context 'when in print_every_line mode' do
+    it 'will print the last thing it saw on a given line' do
+      result = js! <<~JS, print_every_line: true
+      {1;2;3}
+      true
+      false
+      null
+      101
+      101.01
+      ;[1,2]
+      ;[1,
+        2]
+      ;[1,
+        2
+      ]
+      ;({})
+      ;({a:1,b:2})
+      ;({a:1,
+         b:
+           2})
+      ;(function() { 1 })
+      ;() => 1
+      var a = 1, b = 2
+      ;[].forEach
+      setTimeout
+      JS
+
+      expecteds = [
+        [1,  "3"],
+        [2,  "true"],
+        [3,  "false"],
+        [4,  "null"],
+        [5,  "101"],
+        [6,  "101.01"],
+        [7,  "[1, 2]"],
+        [8,  "1"],
+        [9,  "[1, 2]"],
+        [10, "1"],
+        [11, "2"],
+        [12, "[1, 2]"],
+        [13, "{}"],
+        [14, "{a: 1, b: 2}"],
+        [15, "1"],
+        [17, "{a: 1, b: 2}"],
+        [18, "function() { 1 }"],
+        [19, "() => 1"],
+        [20, "2"],
+        [21, "function() { [native code] }"],
+        [22, "function() { [native code: JoshuaScript#set_timeout] }"],
+      ]
+      result.printed_jsons.zip(expecteds).each do |actual, expected|
+        expect(actual).to eq expected
+      end
     end
   end
 

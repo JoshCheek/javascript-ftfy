@@ -1,3 +1,4 @@
+require 'json'
 require 'fiber'
 require 'joshua_script/ast'
 require 'joshua_script/parser'
@@ -6,9 +7,9 @@ require 'joshua_script/parser'
 class JoshuaScript
   ESPARSE = File.expand_path "../node_modules/.bin/esparse", __dir__
 
-  def self.eval(source, stdout:)
+  def self.eval(source, stdout:, print_every_line:)
     js = new stdout: stdout
-    js.enqueue Parser.parse source
+    js.enqueue Parser.parse source, print_every_line: print_every_line
     js.run
   end
 
@@ -72,6 +73,11 @@ class JoshuaScript
     when 'Program'
       ast[:body].map { |child| evaluate child }.last
 
+    when 'I SEE YA!'
+      result = evaluate ast[:to_record], identifier: identifier
+      print_recorded ast, result
+      result
+
     when 'Identifier'
       name = ast[:name]
       if identifier == :resolve
@@ -124,7 +130,7 @@ class JoshuaScript
       ast[:declarations].each { |dec| evaluate dec }
 
     when 'VariableDeclarator'
-      name  = ast[:id][:name]
+      name  = evaluate ast[:id], identifier: :to_s
       value = evaluate ast[:init]
       scopes.last[name] = value
 
@@ -273,6 +279,45 @@ class JoshuaScript
   def fn?(obj)
     return true if obj.respond_to? :call
     obj.kind_of?(Ast) && obj[:body]
+  end
+
+  def print_recorded(ast, result)
+    @stdout.puts "[#{get_line ast}, #{JSON.dump inspect_value result}]"
+  end
+
+  def inspect_value(value)
+    case value
+    when String, TrueClass, FalseClass
+      value.inspect.gsub("\n", '\n')
+    when Numeric
+      if value.to_i == value
+        value.to_i.inspect
+      else
+        value.inspect
+      end
+    when Symbol
+      value.to_s
+    when NilClass
+      'null'
+    when Array
+      "[" << value.map { |child| inspect_value child }.join(", ") << "]"
+    when Hash
+      obj = "{"
+      value.each do |k, v|
+        obj << k.to_s << ": " << inspect_value(v) << ", "
+      end
+      obj.chomp! ", "
+      obj << "}"
+    when Ast
+      value.source_code.gsub("\n", '\n')
+    when Method
+      "function() { [native code: #{value.owner}##{value.name}] }"
+    when Proc
+      "function() { [native code] }"
+    else
+      require "pry"
+      binding.pry
+    end
   end
 
   # ===== Native Functions =====

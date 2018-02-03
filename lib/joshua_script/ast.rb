@@ -5,16 +5,18 @@ class JoshuaScript
   class Ast
     # initialize with parsed esprima output
     attr_reader :type, :loc
-    def initialize(ast)
+    def initialize(ast, source:)
+      @source = source
       @type = ast.fetch :type
       @loc  = ast.fetch :loc
       @ast  = ast.each.with_object({}) do |(k, v), children|
         case v
         when Hash
-          v = Ast.new v if v.key?(:type)
+          v = Ast.new v, source: source if v.key?(:type)
         when Array
           v = v.map do |e|
-            e.kind_of?(Hash) && e.key?(:type) && Ast.new(e) || e
+            e.kind_of?(Hash) && e.key?(:type) &&
+              Ast.new(e, source: source) || e
           end
         end
         children[k] = v
@@ -34,6 +36,22 @@ class JoshuaScript
     # for post-dup init
     def initialize_copy(orig)
       @ast = orig.ast
+    end
+
+    def source_code
+      start_lineno = loc[:start][:line]
+      start_col    = loc[:start][:column]
+      end_lineno   = loc[:end][:line]
+      end_col      = loc[:end][:column]
+      if start_lineno == end_lineno
+        line = @source.lines[start_lineno-1]
+        line[start_col...end_col]
+      else
+        first, *mid, last = @source.lines[start_lineno-1..end_lineno-1]
+        first = first[start_col..-1]
+        last  = last[0...end_col]
+        [first, *mid, last].join("")
+      end
     end
 
     attr_reader :ast
