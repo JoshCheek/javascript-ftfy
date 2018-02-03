@@ -9,4 +9,6 @@ rescue Errno::ENXIO
   # device not configured for tty
 end
 $stdout.sync = true
-JoshuaScript.eval program, stdout: $stdout, print_every_line: false
+
+JoshuaScript.eval program, stdout: $stdout, print_every_line: (ARGV[0] == '-a')
+

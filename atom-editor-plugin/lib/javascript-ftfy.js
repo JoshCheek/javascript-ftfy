@@ -25,17 +25,27 @@ export default {
     const buffer = editor.buffer
     if(!buffer) return
     const js_path = path.resolve(__dirname, '../../bin/joshuascript')
-    const js = spawn(js_path)
+    const js = spawn(js_path, ['-a'])
     buffer.replace(/ *\/\/ => .*$/g, '')
 
     const seen = []
     const rl = createInterface({input: js.stdout})
+    const lineLen = 2 + buffer.getLines().map(l => l.length).reduce((a,b) => a < b ? b : a, 0)
+
     rl.on('line', line => {
       const [lineno, result] = JSON.parse(line)
       const rowno = lineno-1
       const colno = buffer.lineLengthForRow(rowno)
-      const text  = seen[rowno] ? `, ${result}` : `  // => ${result}`
-      seen[rowno] = true
+      let   text  = ''
+      if (!seen[rowno]) {
+        seen[rowno] = true
+        const paddingSize = lineLen - buffer.lineLengthForRow(rowno)
+        for(let i = 0; i < paddingSize; ++i)
+          text += ' '
+        text += `// => ${result}`
+      } else {
+        text = `, ${result}`
+      }
       buffer.insert(new Point(rowno, colno), text)
     })
 
