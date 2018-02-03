@@ -212,6 +212,7 @@ RSpec.describe 'The Interpreter' do
     end
   end
 
+  # consolidate the below blocks?
   describe 'custom functions' do
     specify 'showTime() prints the line number and the time' do
       result = js! <<~JS
@@ -258,6 +259,19 @@ RSpec.describe 'The Interpreter' do
         lineno, time = result.printed_json
         expect(lineno).to eq 1
         expect(time).to match /^1\d ms$/
+      end
+
+      it 'asynchronously returns after the specified amount of time, when no callback is given' do
+        result = js! <<~JS
+        setTimeout(showTime, 50)
+        setTimeout(100)
+        showTime()
+        JS
+        ((l1, t1), (l2, t2)) = result.printed_jsons
+        expect(l1).to eq 1
+        expect(l2).to eq 3
+        expect(t1).to match /^5\d ms/
+        expect(t2).to match /^10\d ms/
       end
     end
 
