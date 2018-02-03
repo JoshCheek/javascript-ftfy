@@ -79,6 +79,27 @@ RSpec.describe 'The Interpreter' do
     js! code, result: eval(code)
   end
 
+  describe 'fix JS comparison' do
+    it 'can compare arrays' do
+      code = <<~JS
+      [ []==[], []==[null], []==[1], [null]==[], [1]==[],
+        [1]==[1], ["a"]==["a"], ["a","b"]==["a","b"], ["a","b"]==["a","c"],
+        ["a","b"]==["b","a"], ["a","b"]==["a","b","c"], ["a","b","c"]==["a","b"]
+      ]
+      JS
+      js! code, result: eval(code.gsub "null", "nil")
+    end
+    it 'can compare objects' do
+      code = <<~JS
+      [ {}=={}, {}=={a:1}, {a:1}=={},
+        {a:1}=={a:1}, {a:1}=={a:2}, {a:1}=={b:1}, {b:1}=={a:1},
+        {a:1,b:2}=={a:1,b:2}, {a:1,b:2}=={a:2,b:1}, {a:1,b:2}=={a:1,b:2,c:3}
+      ]
+      JS
+      js! code, result: eval(code.gsub "null", "nil")
+    end
+  end
+
   it 'can prefix/postfix increment and decrement' do
     js! <<~JS, result: [0,0,  0,1,  2,2,  2,1]
       var a1 = 1
