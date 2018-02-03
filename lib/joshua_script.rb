@@ -26,6 +26,10 @@ class JoshuaScript
     }
   end
 
+  def global
+    @globals
+  end
+
   def enqueue(code)
     @queue << code
     self
@@ -43,6 +47,7 @@ class JoshuaScript
       else
         Fiber.new do
           Thread.current[:scopes] = [@globals]
+          Thread.current[:these]  = [@globals]
           result = evaluate work
         end.resume
       end
@@ -124,14 +129,19 @@ class JoshuaScript
       scopes.last[name] = value
 
     when 'AssignmentExpression'
-      name  = evaluate ast.fetch(:left), identifier: :to_string
-      value = evaluate ast.fetch(:right)
-      scope = find_scope scopes, name
-      scope[name] = value
+      if ast[:left].type == 'MemberExpression'
+        binding = evaluate ast[:left][:object]
+        name    = evaluate ast[:left][:property], identifier: :to_s
+      else
+        name    = evaluate ast[:left], identifier: :to_string
+        binding = find_scope scopes, name
+      end
+      value = evaluate ast[:right]
+      binding[name] = value
 
     when 'ArrowFunctionExpression', 'FunctionExpression'
-      # FIXME: set this on the fn
       ast[:scopes] = scopes.dup # make it a closure
+      ast[:this]   = this
       ast
 
     when 'FunctionDeclaration'
@@ -150,20 +160,25 @@ class JoshuaScript
       result = evaluate ast[:argument]
 
     when 'MemberExpression'
-      object  = evaluate ast[:object]
-      id_type = ast[:computed] ? :resolve : :to_s
-      prop    = evaluate ast[:property], identifier: id_type
+      object    = evaluate ast[:object]
+      id_type   = ast[:computed] ? :resolve : :to_s
+      prop_name = evaluate ast[:property], identifier: id_type
       # Hacky bs that allows us to get some useful functionality now,
       # without implementing prototypes or `this`
       begin
-        object[prop]
+        prop = object[prop_name]
+        if fn?(prop) && prop.respond_to?(:type) && prop.type != 'ArrowFunctionExpression'
+          prop = prop.dup
+          prop[:this] = object
+        end
+        prop
       rescue
-        if object.respond_to? prop
-          object.public_send prop
+        if object.respond_to? prop_name
+          object.public_send prop_name
         else
           case object
           when Array
-            case prop.intern
+            case prop_name.intern
             when :forEach
               lambda do |cb, **|
                 object.each do |e|
@@ -201,9 +216,13 @@ class JoshuaScript
         evaluate ast[:update]
       end
 
+    when 'ThisExpression'
+      this
+
     else
+      pp ast
       require "pry"
-      binding.pry
+      binding().pry
     end
   end
 
@@ -215,6 +234,10 @@ class JoshuaScript
 
   private def scopes
     Thread.current[:scopes]
+  end
+
+  private def this
+    Thread.current[:these].last
   end
 
   private def find_scope(scopes, name)
@@ -230,6 +253,7 @@ class JoshuaScript
       invokable.call *args, ast: ast
     else
       old_scopes = scopes()
+      Thread.current[:these].push invokable[:this, @globals]
       Thread.current[:scopes] = [
         *invokable[:scopes],
         invokable[:params]
@@ -241,8 +265,14 @@ class JoshuaScript
         evaluate invokable[:body]
       ensure
         Thread.current[:scopes] = old_scopes
+        Thread.current[:these].pop
       end
     end
+  end
+
+  def fn?(obj)
+    return true if obj.respond_to? :call
+    obj.kind_of?(Ast) && obj[:body]
   end
 
   # ===== Native Functions =====

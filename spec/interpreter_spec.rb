@@ -2,10 +2,11 @@ require 'joshua_script'
 require 'json'
 
 class Result
-  attr_accessor :value, :printed
-  def initialize(value:, printed:)
-    self.value   = value
-    self.printed = printed
+  attr_accessor :interpreter, :value, :printed
+  def initialize(interpreter:, value:, printed:)
+    self.value       = value
+    self.printed     = printed
+    self.interpreter = interpreter
   end
 
   def printed_jsons
@@ -17,16 +18,23 @@ class Result
     raise "Expected one output! #{jsons.inspect}" unless jsons.length == 1
     jsons.first
   end
+
+  def global
+    interpreter.global
+  end
 end
 
 RSpec.describe 'The Interpreter' do
   def js!(code, result: :undefined)
     stdout = StringIO.new
-    actual = JoshuaScript.eval(code, stdout: stdout)
+    js     = JoshuaScript.new(stdout: stdout)
+    ast    = JoshuaScript::Parser.parse code
+    js.enqueue ast
+    actual = js.run
     if result != :undefined
       expect(actual).to eq result
     end
-    Result.new value: actual, printed: stdout.string
+    Result.new interpreter: js, value: actual, printed: stdout.string
   end
 
   it 'interprets empty files' do
@@ -124,7 +132,7 @@ RSpec.describe 'The Interpreter' do
   end
 
   it 'sets variables in the scope they were defined' do
-    js! <<~JS, result: [1, 12, 3]
+    js! <<~JS, result: [1, 12, 1, 3]
     var a = 1,
         b = a => {
           a = a + 10
@@ -133,9 +141,10 @@ RSpec.describe 'The Interpreter' do
         c = d => a = d
     var aPre = a
     var aFromB = b(2)
+    var midA = a
     c(3)
     var aPost = a
-    ;[aPre, aFromB, aPost]
+    ;[aPre, aFromB, midA, aPost]
     JS
   end
 
@@ -178,7 +187,7 @@ RSpec.describe 'The Interpreter' do
   end
 
 
-  xdescribe 'this' do
+  describe 'this' do
     it 'is set to the global object by default' do
       result = js! 'this'
       expect(result.value).to eq result.global
@@ -196,19 +205,34 @@ RSpec.describe 'The Interpreter' do
 
     it 'is bound to the existing this, when the function was a fat arrow' do
       result = js! <<~JS
-      var a = {fn: () => this}
-      a.fn()
+      var a = {
+        build: function() {
+          return () => this
+        }
+      }
+      var b = {getA: a.build()}
+      ;[a, b.getA()]
       JS
-      expect(result.value).to eq result.global
+      a, b_get_a = result.value
+      expect(b_get_a).to eq a
     end
 
-    it 'is set to the global object within a non-method' do
+    it 'deviates from JavaScript and is bound to the object it was pulled from' do
       result = js! <<~JS
       var a = {fn: function() { return this }}
       var fn = a.fn
-      fn()
+      ;[fn(), a]
       JS
-      expect(result.value).to eq result.global
+      fn, a = result.value
+      expect(fn).to eq a
+    end
+
+    it 'can set and get values from this' do
+      js! <<~JS, result: 123
+      var a = {setX: function(val) { this.x = val }}
+      a.setX(123)
+      a.x
+      JS
     end
   end
 

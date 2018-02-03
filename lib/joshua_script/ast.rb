@@ -21,8 +21,8 @@ class JoshuaScript
       end
     end
 
-    def [](key)
-      @ast.fetch key
+    def [](key, *default)
+      @ast.fetch key, *default
     end
 
     def []=(key, value)
@@ -30,6 +30,14 @@ class JoshuaScript
     end
 
     alias fetch []
+
+    # for post-dup init
+    def initialize_copy(orig)
+      @ast = orig.ast
+    end
+
+    attr_reader :ast
+    protected :ast
 
     # "open for extension, closed for modification" you can't extend pp
     # without guerilla patching it and overriding core methods, eg:
