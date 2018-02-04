@@ -258,8 +258,9 @@ RSpec.describe 'The Interpreter' do
   end
 
   context 'when in print_every_line mode' do
-    it 'will print the last thing it saw on a given line' do
+    it 'will print the last thing it saw on a given line', t:true do
       result = js! <<~JS, print_every_line: true
+      import {readFile} from 'fs'
       {1;2;3}
       true
       false
@@ -285,27 +286,28 @@ RSpec.describe 'The Interpreter' do
       JS
 
       expecteds = [
-        [1,  "3"],
-        [2,  "true"],
-        [3,  "false"],
-        [4,  "null"],
-        [5,  "101"],
-        [6,  "101.01"],
-        [7,  "[1, 2]"],
-        [8,  "1"],
-        [9,  "[1, 2]"],
-        [10, "1"],
-        [11, "2"],
-        [12, "[1, 2]"],
-        [13, "{}"],
-        [14, "{a: 1, b: 2}"],
-        [15, "1"],
-        [17, "{a: 1, b: 2}"],
-        [18, "function() { 1 }"],
-        [19, "() => 1"],
-        [20, "2"],
-        [21, "function() { [native code] }"],
-        [22, "function() { [native code: JoshuaScript#set_timeout] }"],
+        [1,  "\"fs\""], # mostly, just don't want it to say "JoshuaScript" in the output
+        [2,  "3"],
+        [3,  "true"],
+        [4,  "false"],
+        [5,  "null"],
+        [6,  "101"],
+        [7,  "101.01"],
+        [8,  "[1, 2]"],
+        [9,  "1"],
+        [10,  "[1, 2]"],
+        [11, "1"],
+        [12, "2"],
+        [13, "[1, 2]"],
+        [14, "{}"],
+        [15, "{a: 1, b: 2}"],
+        [16, "1"],
+        [18, "{a: 1, b: 2}"],
+        [19, "function() { 1 }"],
+        [20, "() => 1"],
+        [21, "2"],
+        [22, "function() { [native code] }"],
+        [23, "function() { [native code: JoshuaScript#set_timeout] }"],
       ]
       result.printed_jsons.zip(expecteds).each do |actual, expected|
         expect(actual).to eq expected

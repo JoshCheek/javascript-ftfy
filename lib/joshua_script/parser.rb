@@ -81,6 +81,7 @@ class JoshuaScript
       Property
       VariableDeclarator
       VariableDeclaration
+      ImportDeclaration
     ].map(&:freeze).freeze
     def self.should_record?(potential, recorded)
       return false unless potential.kind_of? Hash

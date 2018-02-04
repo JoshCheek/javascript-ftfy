@@ -232,7 +232,7 @@ class JoshuaScript
     when 'ImportDeclaration'
       source_name = evaluate ast[:source]
       required = js_require(source_name)
-      ast[:specifiers].each do |specifier|
+      ast[:specifiers].map do |specifier|
         # there is also an `imported` key, presumably to allow renaming with `as`
         name = evaluate specifier[:local], identifier: :to_s
         scopes.last[name] = required[name]
@@ -347,12 +347,19 @@ class JoshuaScript
     }
 
     timeout = lambda do |code|
-      @workers << Thread.new do
-        Thread.current.abort_on_exception = true
-        sleep ms/1000.0
+      if ms == 0
+        # don't give multiple threads sleeping for 0ms
+        # the chance to run out of order
         enqueue code
+      else
+        @workers << Thread.new do
+          Thread.current.abort_on_exception = true
+          sleep ms/1000.0
+          enqueue code
+        end
+        Thread.pass # gets the sleeper thread running sooner
       end
-      Thread.pass # gets the sleeper thread running sooner
+      nil
     end
 
     # return immediately if callback was given
