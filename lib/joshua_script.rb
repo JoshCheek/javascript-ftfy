@@ -21,6 +21,7 @@ class JoshuaScript
       'showTime'    => method(:show_time),
       'setTimeout'  => method(:set_timeout),
       'showVersion' => method(:show_version),
+      'require'     => method(:js_require),
       'console'     => {
         'log' => method(:console_log),
       },
@@ -225,6 +226,15 @@ class JoshuaScript
     when 'ThisExpression'
       this
 
+    when 'ImportDeclaration'
+      source_name = evaluate ast[:source]
+      required = js_require(source_name)
+      ast[:specifiers].each do |specifier|
+        # there is also an `imported` key, presumably to allow renaming with `as`
+        name = evaluate specifier[:local], identifier: :to_s
+        scopes.last[name] = required[name]
+      end
+
     else
       pp ast
       require "pry"
@@ -361,5 +371,37 @@ class JoshuaScript
 
   def console_log(to_log, ast:, **)
     @stdout.puts "[#{get_line ast}, #{to_log.inspect}]"
+  end
+
+  def js_require(filename, **)
+    case filename
+    when 'fs'
+      { 'readFile' => method(:js_read_file) }
+    else raise "No such file: #{filename.inspect}"
+    end
+  end
+
+  def js_read_file(filename, encoding, callback=nil, ast:, **)
+    if callback
+      @workers << Thread.new do
+        Thread.current.abort_on_exception = true
+        body = File.read(filename)
+        enqueue type:      'Invooooooooke!',
+                invokable: callback,
+                scope:     [global],
+                args:      [nil, body],
+                loc:       ast.loc
+      end
+    else
+      body = nil
+      f = Fiber.current
+      @workers << Thread.new do
+        Thread.current.abort_on_exception = true
+        body = File.read filename
+        enqueue f
+      end
+      Fiber.yield
+      body
+    end
   end
 end

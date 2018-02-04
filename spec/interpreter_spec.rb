@@ -313,6 +313,7 @@ RSpec.describe 'The Interpreter' do
     end
   end
 
+
   # consolidate the below blocks?
   describe 'custom functions' do
     specify 'showTime() prints the line number and the time' do
@@ -339,7 +340,9 @@ RSpec.describe 'The Interpreter' do
     end
   end
 
-  describe 'existing context' do
+
+
+  describe 'native functions' do
     describe 'console.log()' do
       # maybe specify what happens when you pass it non-string args?
 
@@ -350,10 +353,39 @@ RSpec.describe 'The Interpreter' do
         expect(version).to match "hello world"
       end
     end
-  end
 
+    describe 'fs.readFile', t:true  do
+      require 'tempfile'
+      before do
+        @file = Tempfile.new
+        @file.write "hello world!"
+        @file.close
+      end
 
-  describe 'native functions' do
+      after do
+        @file&.unlink
+      end
+
+      it 'reads async with a callback' do
+        result = js! <<~JS
+        import { readFile } from 'fs'
+        readFile("#{@file.path}", 'utf-8', (err, body) => console.log(body))
+        JS
+        printed = result.printed_json.last
+        expect(printed).to eq File.read @file.path
+      end
+
+      it 'reads async without a callback' do
+        result = js! <<~JS
+        import { readFile } from 'fs'
+        var body = readFile("#{@file.path}", 'utf-8')
+        console.log(body)
+        JS
+        printed = result.printed_json.last
+        expect(printed).to eq File.read @file.path
+      end
+    end
+
     describe 'setTimeout' do
       it 'waits about the specified length of time, and then calls the fn' do
         result = js! 'setTimeout(showTime, 10)'
