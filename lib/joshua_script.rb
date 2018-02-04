@@ -180,22 +180,25 @@ class JoshuaScript
         end
         prop
       rescue
-        if object.respond_to? prop_name
-          object.public_send prop_name
-        else
-          case object
-          when Array
-            case prop_name.intern
-            when :forEach
-              lambda do |cb, **|
-                object.each do |e|
-                  invoke cb, [e], ast: ast
-                end
+        case object
+        when Array
+          case prop_name.intern
+          when :length
+            object.length
+          when :push
+            lambda do |val, **|
+              object.push val
+              val
+            end
+          when :forEach
+            lambda do |cb, **|
+              object.each do |e|
+                invoke cb, [e], ast: ast
               end
             end
-          else
-            raise
           end
+        else
+          raise
         end
       end
 

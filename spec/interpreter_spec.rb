@@ -354,7 +354,7 @@ RSpec.describe 'The Interpreter' do
       end
     end
 
-    describe 'fs.readFile', t:true  do
+    describe 'fs.readFile'  do
       require 'tempfile'
       before do
         @file = Tempfile.new
@@ -414,6 +414,15 @@ RSpec.describe 'The Interpreter' do
         var result = ""
         ;["a", "b", "c"].forEach(e => result = result + e)
         result
+        JS
+      end
+    end
+
+    describe 'Array.push' do
+      it 'pushes an item onto the array and returns the item' do
+        js! <<~JS, result: ['x', ['x']]
+        var a = []
+        ;[a.push('x'), a]
         JS
       end
     end
