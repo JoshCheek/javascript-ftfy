@@ -30,7 +30,9 @@ export default {
 
     const seen = []
     const rl = createInterface({input: js.stdout})
-    const lineLen = 2 + buffer.getLines().map(l => l.length).reduce((a,b) => a < b ? b : a, 0)
+    let lineLen = buffer.getLines().map(l => l.length).reduce((a,b) => a < b ? b : a, 0)
+    if(lineLen > 55)
+      lineLen = 40 // don't put all the annotations after really long lines
 
     rl.on('line', line => {
       const [lineno, result] = JSON.parse(line)
@@ -42,7 +44,7 @@ export default {
         const paddingSize = lineLen - buffer.lineLengthForRow(rowno)
         for(let i = 0; i < paddingSize; ++i)
           text += ' '
-        text += `// => ${result}`
+        text += `  // => ${result}`
       } else {
         text = `, ${result}`
       }
