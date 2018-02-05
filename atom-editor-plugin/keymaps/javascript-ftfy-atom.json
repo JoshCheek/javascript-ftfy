@@ -1,6 +1,7 @@
 {
   "atom-workspace": {
     "cmd-alt-j": "JavaScript FTFY:annotate-document",
-    "cmd-alt-k": "JavaScript FTFY:clear-annotations"
+    "cmd-alt-k": "JavaScript FTFY:clear-annotations",
+    "cmd-alt-l": "JavaScript FTFY:annotate-printed"
   }
 }

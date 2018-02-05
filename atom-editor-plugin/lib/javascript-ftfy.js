@@ -10,8 +10,9 @@ export default {
   activate(state) {
     this.subscriptions = new CompositeDisposable()
     this.subscriptions.add(atom.commands.add('atom-workspace', {
-      'JavaScript FTFY:annotate-document': () => this.annotate(),
+      'JavaScript FTFY:annotate-document': () => this.annotate(true),
       'JavaScript FTFY:clear-annotations': () => this.clear(),
+      'JavaScript FTFY:annotate-printed':  () => this.annotate(false),
     }))
   },
 
@@ -19,13 +20,17 @@ export default {
     this.subscriptions.dispose()
   },
 
-  annotate() {
+  annotate(allLines) {
     const editor = atom.workspace.getActiveTextEditor()
     if(!editor) return
     const buffer = editor.buffer
     if(!buffer) return
-    const js_path = path.resolve(__dirname, '../../bin/joshuascript')
-    const js = spawn(js_path, ['-a'])
+    const jsPath = path.resolve(__dirname, '../../bin/joshuascript')
+    const args   = []
+    if(allLines)
+      args.push('-a')
+    console.log("ARGS", args)
+    const js = spawn(jsPath, args)
     buffer.replace(/ *\/\/ => .*$/g, '')
 
     const seen = []
