@@ -37,6 +37,10 @@ RSpec.describe 'The Interpreter' do
     Result.new interpreter: js, value: actual, printed: stdout.string
   end
 
+  it 'raises syntax errors for invalid code' do
+    expect { js! '1+' }.to raise_error JoshuaScript::Parser::SyntaxError, /line 1\b/i
+  end
+
   it 'interprets empty files' do
     js! '', result: nil
   end

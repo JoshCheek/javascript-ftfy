@@ -18,14 +18,22 @@ let server
 // this should be GET, but you can't send a body in a GET request -.^
 app.post('/parse', (req, res) => {
   const javascript = req.body
-  const ast = esprima.parseModule(javascript, {loc: true, jsx: true})
-  const jsonAst = JSON.stringify(ast)
-  res.send(jsonAst)
+  let ast, response, status
+  try {
+    ast      = esprima.parseModule(javascript, {loc: true, jsx: true})
+    response = JSON.stringify(ast)
+    status   = 200
+  } catch(err) {
+    response = JSON.stringify({error: err.message})
+    status   = 400
+    console.log(response)
+  }
+  res.status(status).send(response)
   if (doLog) {
     console.log("=====  REQUEST =====")
     console.log(req.body)
     console.log("=====  RESPONSE =====")
-    console.log(jsonAst)
+    console.log(response)
   }
 })
 
