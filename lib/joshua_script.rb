@@ -17,7 +17,7 @@ class JoshuaScript
     @stdout  = stdout
     @workers = []
     @queue   = Queue.new
-    @globals = {
+    @global = {
       'showTime'    => method(:show_time),
       'setTimeout'  => method(:set_timeout),
       'showVersion' => method(:show_version),
@@ -28,9 +28,7 @@ class JoshuaScript
     }
   end
 
-  def global
-    @globals
-  end
+  attr_reader :global
 
   def enqueue(code)
     @queue << code
@@ -48,8 +46,8 @@ class JoshuaScript
         work.resume
       else
         Fiber.new do
-          Thread.current[:scopes] = [@globals]
-          Thread.current[:these]  = [@globals]
+          Thread.current[:scopes] = [global]
+          Thread.current[:these]  = [global]
           result = evaluate work
         end.resume
       end
@@ -272,7 +270,7 @@ class JoshuaScript
       invokable.call *args, ast: ast
     else
       old_scopes = scopes()
-      Thread.current[:these].push invokable[:this, @globals]
+      Thread.current[:these].push invokable[:this, global]
       Thread.current[:scopes] = [
         *invokable[:scopes],
         invokable[:params]
@@ -341,7 +339,7 @@ class JoshuaScript
     cb &&= {
       type:      'Invooooooooke!',
       invokable: cb,
-      scope:     [@globals],
+      scope:     [global],
       args:      [],
       loc:       ast.loc,
     }
