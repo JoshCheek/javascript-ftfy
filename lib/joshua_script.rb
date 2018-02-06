@@ -236,6 +236,11 @@ class JoshuaScript
         scopes.last[local_name] = required[imported_name]
       end
 
+    when 'UnaryExpression'
+      raise not_implemented unless ast[:prefix]
+      obj = evaluate ast[:argument]
+      obj.send ast[:operator]
+
     else
       pp ast
       require "pry"

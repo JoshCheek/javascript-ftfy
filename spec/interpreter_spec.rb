@@ -55,6 +55,12 @@ RSpec.describe 'The Interpreter' do
     js! '({"a": 1})', result: {'a' => 1}
   end
 
+  it 'can negate values' do
+    js! <<~JS, result: [ false, true, true, false, false, false, false ]
+    [!true, !false, !null, ![1,2,3], ![], !{a:1}, !{}]
+    JS
+  end
+
   it 'can add/subtract/multiply/divide/mod' do
     js! '[10+2, 10-2, 10*2, 10/2, 4%3, 5%3, 6%3, "ab"+"cd"]',
         result: [12, 8, 20, 5, 1, 2, 0, "abcd"]
