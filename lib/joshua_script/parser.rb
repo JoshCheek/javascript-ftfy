@@ -1,6 +1,6 @@
 require 'set'
 require 'json'
-require 'open3'
+require 'net/http'
 
 class JoshuaScript
   module Parser
@@ -8,18 +8,13 @@ class JoshuaScript
     LOG_DIR  = File.expand_path '../../tmp', __dir__
     PORTFILE = File.join LOG_DIR, 'port'
 
-    require 'net/http'
-    require 'json'
-
     def self.parse(js, first_time=true, print_every_line: false)
       http         = Net::HTTP.new 'localhost', Parser.port
       request      = Net::HTTP::Post.new '/parse', 'Content-Type' => 'text/plain'
       request.body = js
       response     = http.request request
       json         = JSON.parse response.body, symbolize_names: true
-      if print_every_line
-        json = print_every_line json
-      end
+      json         = print_every_line json if print_every_line
       JoshuaScript::Ast.new json, source: js
     rescue Errno::ECONNREFUSED, # port file exists, but server isn't on that port
            Errno::EADDRNOTAVAIL # not sure
