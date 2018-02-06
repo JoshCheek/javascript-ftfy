@@ -233,9 +233,9 @@ class JoshuaScript
       source_name = evaluate ast[:source]
       required = js_require(source_name)
       ast[:specifiers].map do |specifier|
-        # there is also an `imported` key, presumably to allow renaming with `as`
-        name = evaluate specifier[:local], identifier: :to_s
-        scopes.last[name] = required[name]
+        local_name = evaluate specifier[:local], identifier: :to_s
+        imported_name = evaluate specifier[:imported], identifier: :to_s
+        scopes.last[local_name] = required[imported_name]
       end
 
     else

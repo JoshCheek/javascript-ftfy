@@ -258,7 +258,7 @@ RSpec.describe 'The Interpreter' do
   end
 
   context 'when in print_every_line mode' do
-    it 'will print the last thing it saw on a given line', t:true do
+    it 'will print the last thing it saw on a given line' do
       result = js! <<~JS, print_every_line: true
       import {readFile} from 'fs'
       {1;2;3}
@@ -385,6 +385,16 @@ RSpec.describe 'The Interpreter' do
         JS
         printed = result.printed_json.last
         expect(printed).to eq File.read @file.path
+      end
+    end
+
+    describe 'import' do
+      it 'can import under another name' do
+        js! <<~JS, result: true
+        import { readFile } from 'fs'
+        import { readFile as read } from 'fs'
+        readFile == read
+        JS
       end
     end
 
