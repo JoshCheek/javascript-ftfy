@@ -40,12 +40,14 @@ class JoshuaScript
 
     def self.start_server
       Dir.mkdir LOG_DIR unless Dir.exist? LOG_DIR
-      start_time = Time.now
+      # precision isn't high enough that the portfile's time is always after the start time,
+      # so use precision of only seconds, and subtract a second from it to reduce infinite loops from precision issues
+      start_time = Time.now.to_i - 1 # 1 second ago, to account for imprecise timing
       write = File.open '/dev/null' # I think there's an OS indifferent way to do this, but can't remember what it is
       spawn File.join(BIN_DIR, 'parser'), in: :close, out: write
       loop do
         next sleep 0.01 unless File.exist? PORTFILE
-        next sleep 0.01 unless start_time < File.mtime(PORTFILE)
+        next sleep 0.01 unless start_time <= File.mtime(PORTFILE).to_i
         break
       end
       self.port = File.read(PORTFILE).to_i
