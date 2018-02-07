@@ -5,8 +5,6 @@ require 'joshua_script/parser'
 
 
 class JoshuaScript
-  ESPARSE = File.expand_path "../node_modules/.bin/esparse", __dir__
-
   def self.eval(source, stdout:, print_every_line:)
     js = new stdout: stdout
     js.enqueue Parser.parse source, print_every_line: print_every_line
