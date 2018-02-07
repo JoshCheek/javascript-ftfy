@@ -4,7 +4,7 @@
 class JoshuaScript
   class Ast
     # initialize with parsed esprima output
-    attr_reader :type, :loc
+    attr_reader :type, :loc, :source
     def initialize(ast, source:)
       @source = source
       @type = ast.fetch :type
@@ -78,7 +78,7 @@ class JoshuaScript
       max_key_len = 0  # for key alignment
 
       children = @ast.reject do |k|
-        k == :type || k == :loc || k == :scope
+        k == :type || k == :loc || k == :scope || k == :scopes #|| k == :this
       end
 
       # inspect the children

@@ -81,7 +81,7 @@ class JoshuaScript
       name = ast[:name]
       if identifier == :resolve
         scope = find_scope scopes, name
-        raise "Undefined: #{name}" if !scope # FIXME: untested temp(?) hack
+        raise "Undefined: #{name.inspect}" if !scope # FIXME: untested temp(?) hack
         scope[name]
       else
         name
@@ -93,10 +93,19 @@ class JoshuaScript
     when 'Invooooooooke!' # FIXME: this is an internal call, unify it w/ the others
       invoke ast[:invokable], ast[:args], ast: ast
 
+    when 'QuotedCode'
+      ast
+
     when 'CallExpression'
-      method = evaluate ast[:callee]
-      args   = ast[:arguments].map { |arg| evaluate arg }
-      invoke method, args, ast: ast
+      invokable = evaluate ast[:callee]
+      if invokable.kind_of?(Ast) && evaluate(invokable[:id], identifier: :to_s).start_with?("macro$")
+        args = ast[:arguments]
+        code = expand_macro invokable, args
+        evaluate code
+      else
+        args = ast[:arguments].map { |arg| evaluate arg }
+        invoke invokable, args, ast: ast
+      end
 
     when 'Literal'
       value = ast.fetch :value
@@ -145,6 +154,8 @@ class JoshuaScript
       binding[name] = value
 
     when 'ArrowFunctionExpression', 'FunctionExpression'
+      # FIXME: setting scopes on the AST causes it to clobber the previous scopes
+      # There should probably be a "callable" abstraction pulled out of here
       ast[:scopes] = scopes.dup # make it a closure
       ast[:this]   = this
       ast
@@ -292,6 +303,81 @@ class JoshuaScript
     end
   end
 
+  private def expand_macro(invokable, args)
+    not_implemented if invokable.kind_of?(Proc) || invokable.kind_of?(Method)
+    locals = invokable[:params]
+              .map { |param| evaluate param, identifier: :to_string }
+              .zip(args)
+              .to_h
+    do_expand_macro invokable[:body], locals
+  end
+
+  def do_expand_macro(invokable, locals)
+    return invokable unless invokable.kind_of? Ast
+    return invokable if invokable.kind_of?(Proc) || invokable.kind_of?(Method)
+    expanded = Ast.new(
+      { type:   invokable.type,
+        loc:    invokable.loc,
+      },
+      source: invokable.source,
+    )
+
+    case invokable.type
+    when 'Literal', 'MemberExpression'
+      return invokable
+
+    when 'Identifier'
+      return locals.fetch invokable[:name]
+
+    when 'BlockStatement'
+      expanded[:body] = invokable[:body].map { |child| do_expand_macro child, locals }
+
+    when 'ExpressionStatement'
+      expanded[:expression] = do_expand_macro invokable[:expression], locals
+
+    when 'IfStatement'
+      expanded[:test]       = do_expand_macro invokable[:test],       locals
+      expanded[:consequent] = do_expand_macro invokable[:consequent], locals
+      expanded[:alternate]  = do_expand_macro invokable[:alternate],  locals
+
+    when 'UnaryExpression'
+      expanded[:prefix]   = invokable[:prefix]
+      expanded[:operator] = invokable[:operator]
+      expanded[:argument] = do_expand_macro invokable[:argument], locals
+
+    when 'I SEE YA!'
+      expanded[:to_record] = do_expand_macro invokable[:to_record], locals
+
+    when 'CallExpression'
+      expanded[:arguments] = invokable[:arguments].map do |argument|
+        do_expand_macro argument, locals
+      end
+      expanded[:callee]    = do_expand_macro invokable[:callee], locals
+
+    when 'TemplateLiteral'
+      if invokable[:expressions].length == 1 &&
+          invokable[:quasis].map { |el| el[:value][:cooked] } == ['', '']
+        quoted = do_expand_macro invokable[:expressions][0], locals
+        return Ast.new(
+          { type:   'QuotedCode',
+            loc:    quoted.loc,
+            quoted: quoted,
+          },
+          source: quoted.source,
+        )
+        invokable[:expressions].length
+      else
+        not_implemented
+      end
+
+    else
+      require "pry"
+      binding().pry
+    end
+
+    expanded
+  end
+
   def fn?(obj)
     return true if obj.respond_to? :call
     obj.kind_of?(Ast) && obj[:body]
@@ -383,7 +469,7 @@ class JoshuaScript
   end
 
   def console_log(to_log, ast:, **)
-    @stdout.puts "[#{get_line ast}, #{to_log.inspect}]"
+    print_recorded ast, to_log
   end
 
   def js_require(filename, **)

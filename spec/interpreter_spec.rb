@@ -349,6 +349,22 @@ RSpec.describe 'The Interpreter' do
   end
 
 
+  describe 'omg, macros!' do
+    it 'turns functions beginning with m$ into macros!', wat:true do
+      result = js! <<~JS
+      function m$unless(condition, action) {
+        if(!condition) action
+      }
+      m$unless(1 == 1,
+        console.log("hello")
+      )
+      m$unless(1 == 1,
+        console.log("world")
+      )
+      JS
+      expect(result.printed_json.last).to eq 'world'
+    end
+  end
 
   describe 'native functions' do
     describe 'console.log()' do
