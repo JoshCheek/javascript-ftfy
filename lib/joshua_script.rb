@@ -340,7 +340,12 @@ class JoshuaScript
 
   # Have to take empty kwargs here b/c Ruby has a bug.
   # I reported it here: https://bugs.ruby-lang.org/issues/14415
-  def set_timeout(cb=nil, ms, ast:, **)
+  def set_timeout(cb=nil, ms=nil, ast:, **)
+    if cb.kind_of?(Numeric) && ms.nil?
+      ms, cb = cb, nil
+    else
+      ms ||= 0
+    end
     cb &&= {
       type:      'Invooooooooke!',
       invokable: cb,

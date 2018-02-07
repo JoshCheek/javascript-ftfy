@@ -10,5 +10,15 @@ rescue Errno::ENXIO
 end
 $stdout.sync = true
 
-JoshuaScript.eval program, stdout: $stdout, print_every_line: (ARGV[0] == '-a')
+begin
+  JoshuaScript.eval(
+    program,
+    stdout: $stdout,
+    print_every_line: (ARGV[0] == '-a')
+  )
+rescue
+  $stderr.puts $!.class.name.to_s[/[^:]+$/]
+  $stderr.puts $!.message
+  exit 1
+end
 

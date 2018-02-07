@@ -37,6 +37,10 @@ RSpec.describe 'The Interpreter' do
     Result.new interpreter: js, value: actual, printed: stdout.string
   end
 
+  it 'raises syntax errors for invalid code' do
+    expect { js! '1+' }.to raise_error JoshuaScript::Parser::SyntaxError, /line 1\b/i
+  end
+
   it 'interprets empty files' do
     js! '', result: nil
   end
@@ -423,6 +427,11 @@ RSpec.describe 'The Interpreter' do
         expect(l2).to eq 3
         expect(t1).to match /^5\d ms/
         expect(t2).to match /^10\d ms/
+      end
+
+      it 'sets the timeout to 0 when no value is given' do
+        result = js! 'setTimeout(showTime)'
+        expect(result.printed_json).to eq [1, '0 ms']
       end
     end
 
