@@ -40,7 +40,9 @@ export default {
       lineLen = 40 // don't put all the annotations after really long lines
 
     rl.on('line', line => {
-      const [lineno, result] = JSON.parse(line)
+      let [lineno, result] = JSON.parse(line)
+      if(typeof result === 'string')
+        result = result.replace(/\n/g, "\\n")
       const rowno = lineno-1
       const colno = buffer.lineLengthForRow(rowno)
       let   text  = ''
