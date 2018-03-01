@@ -408,7 +408,7 @@ class JoshuaScript
                 args:      [nil, body],
                 loc:       ast.loc
       end
-      nil # FIXME: Untested b/c the callbacks were making it difficult to get at the returned value -.-
+      nil
     else
       body = nil
       f = Fiber.current

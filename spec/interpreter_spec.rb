@@ -22,6 +22,10 @@ class Result
   def global
     interpreter.global
   end
+
+  def [](key)
+    interpreter.global.fetch key
+  end
 end
 
 RSpec.describe 'The Interpreter' do
@@ -381,10 +385,11 @@ RSpec.describe 'The Interpreter' do
       it 'reads async with a callback' do
         result = js! <<~JS
         import { readFile } from 'fs'
-        readFile("#{@file.path}", 'utf-8', (err, body) => console.log(body))
+        let readFileResult = readFile("#{@file.path}", 'utf-8', (err, body) => console.log(body))
         JS
         printed = result.printed_json.last
         expect(printed).to eq File.read @file.path
+        expect(result['readFileResult']).to eq nil # should be undefined, but I have no representation of undefined at present
       end
 
       it 'reads async without a callback' do
