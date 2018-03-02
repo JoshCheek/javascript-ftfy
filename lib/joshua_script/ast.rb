@@ -35,7 +35,7 @@ class JoshuaScript
 
     # for post-dup init
     def initialize_copy(orig)
-      @ast = orig.ast
+      @ast = @ast.dup
     end
 
     def source_code

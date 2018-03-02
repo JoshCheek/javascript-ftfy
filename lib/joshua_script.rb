@@ -15,7 +15,7 @@ class JoshuaScript
     @stdout  = stdout
     @workers = []
     @queue   = Queue.new
-    @global = {
+    @global  = {
       'showTime'    => method(:show_time),
       'setTimeout'  => method(:set_timeout),
       'showVersion' => method(:show_version),
@@ -143,6 +143,7 @@ class JoshuaScript
       binding[name] = value
 
     when 'ArrowFunctionExpression', 'FunctionExpression'
+      ast          = ast.dup
       ast[:scopes] = scopes.dup # make it a closure
       ast[:this]   = this
       ast

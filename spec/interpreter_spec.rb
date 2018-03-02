@@ -197,6 +197,25 @@ RSpec.describe 'The Interpreter' do
     JS
   end
 
+  it 'can be evaluated multiple times in different scopes' do
+    js! <<~JS, result: [11.0, 12.0]
+    const fn = a => b => a + b
+    const onePlus = fn(1)
+    const twoPlus = fn(2)
+    ;[onePlus(10), twoPlus(10)]
+    JS
+    js! <<~JS, result: [11.0, 12.0]
+    function fn(a) {
+      return function fnInner(b) {
+        return a + b
+      }
+    }
+    const onePlus = fn(1)
+    const twoPlus = fn(2)
+    ;[onePlus(10), twoPlus(10)]
+    JS
+  end
+
   it 'has the if statements, y\'all' do
     js! <<~JS, result: [1, 2, 1, nil]
       // TODO: Why does this need fkn blocks around the branches?
@@ -447,6 +466,21 @@ RSpec.describe 'The Interpreter' do
         ;["a", "b", "c"].forEach(e => result = result + e)
         result
         JS
+      end
+
+      it 'scopes the variable correctly for working with async functions' do
+        result = js! <<~JS
+        let str = '', ary = ['a', 'b', 'c']
+        ary.forEach(
+          char => setTimeout(() => {
+            str = str + char
+            if(char == 'c')
+              console.log(str)
+          }, 0)
+        )
+        JS
+        _, printed = result.printed_json
+        expect(printed).to eq 'abc'
       end
     end
 
