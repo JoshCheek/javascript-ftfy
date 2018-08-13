@@ -8,27 +8,6 @@ asynchronously, without blocking.
 For an example, of what this means, check out [examples/sync-example.js](sync-example.js).
 
 
-How to use
-----------
-
-At present, it's only useful to show that you can write synchronous code that
-runs asynchronously.
-
-The output is specifically crafted to allow the Atom Editor plugin to modify
-the JS file that it ran, and update the contents of the buffer with the results.
-
-To use with Atom, from this project's root:
-
-```
-$ ln -s "$PWD"/atom-editor-plugin/  "$HOME"/.atom/packages/javascript-ftfy-atom
-```
-
-Then reload your Atom window, you can use:
-
-* Cmd-Opt-J to display the results
-* Cmd-Opt-K to clear the results
-
-
 Install
 -------
 
@@ -39,6 +18,28 @@ versions of those that it needs, but locally, mine are Ruby 2.5.0, and Node 8.9.
 $ npm install
 $ bundle install # if this fails, `gem install bundler` and try again
 ```
+
+Then, to use it with Atom:
+
+```
+$ ln -s "$PWD"/atom-editor-plugin/  "$HOME"/.atom/packages/javascript-ftfy-atom
+```
+
+How to use
+----------
+
+At present, it's only useful to show that you can write synchronous code that
+runs asynchronously.
+
+The output is specifically crafted to allow the Atom Editor plugin to modify
+the JS file that it ran, and update the contents of the buffer with the results.
+
+Then reload your Atom window, you can use:
+
+* Cmd-Opt-J to display the results of every line
+* Cmd-Opt-K to clear the results
+* Cmd-Opt-L to display only the lines that print output
+
 
 
 Test
