@@ -402,9 +402,9 @@ RSpec.describe 'The Interpreter' do
       expect(times.length).to eq 3
       linenos, printeds = times.transpose
       expect(linenos).to eq [1, 4, 3]
-      expect(printeds[0]).to eq '0 ms'
-      expect(printeds[1]).to eq '0 ms'
-      expect(printeds[2]).to match /10\d ms/
+      expect(printeds[0]).to match '[01] ms'
+      expect(printeds[1]).to match '[01] ms'
+      expect(printeds[2]).to match /1[01]\d ms/
     end
 
     specify 'showVersion() prints the lineno and something amusing' do
