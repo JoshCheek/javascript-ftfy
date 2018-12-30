@@ -1,4 +1,4 @@
-var task_list = [
+var taskList = [
   ["task 1.1", "task 1.2"],
   ["task 2"],
   ["task 3"],
@@ -10,7 +10,7 @@ setTimeout(showTime, 150)  // => 155 ms
 setTimeout(showTime, 250)  // => 251 ms
 
 // A bunch of synchronous work that takes 200ms
-task_list.forEach(tasks =>
+taskList.forEach(tasks =>
   tasks.forEach(task => {
     setTimeout(50) // represents async task work, eg IO
 
