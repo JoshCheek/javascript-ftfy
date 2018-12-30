@@ -2,21 +2,17 @@ require 'joshua_script'
 require 'json'
 
 class Result
-  attr_accessor :interpreter, :value, :printed
+  attr_accessor :interpreter, :value, :printed, :printed_jsons
   def initialize(interpreter:, value:, printed:)
-    self.value       = value
-    self.printed     = printed
-    self.interpreter = interpreter
-  end
-
-  def printed_jsons
-    printed.lines.map { |line| JSON.parse line }
+    self.value         = value
+    self.printed       = printed
+    self.interpreter   = interpreter
+    self.printed_jsons = printed.lines.map { |line| JSON.parse line }
   end
 
   def printed_json
-    jsons = printed_jsons
-    raise "Expected one output! #{jsons.inspect}" unless jsons.length == 1
-    jsons.first
+    raise "Expected one output! #{printed_jsons.inspect}" unless printed_jsons.length == 1
+    printed_jsons.first
   end
 
   def global
