@@ -427,6 +427,21 @@ RSpec.describe 'The Interpreter' do
         expect(lineno).to eq 1
         expect(version).to match "hello world"
       end
+
+      it 'logs objects without wrapping strings around their keys unless it needs to', t:true do
+        # we're going to deviate a bit from what node prints,
+        # but matching their output exactly is high difficulty with low value
+        result = js! <<~JS
+        console.log({a: 1, b: 2})
+        console.log({"a b": 1})
+        console.log({"a'b": 1})
+        JS
+        expect(result.printed_jsons.map(&:last)).to eq [
+          '{a: 1, b: 2}',
+          '{"a b": 1}',
+          '{"a\'b": 1}',
+        ]
+      end
     end
 
     describe 'fs.readFile'  do

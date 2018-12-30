@@ -340,7 +340,9 @@ class JoshuaScript
     when Hash
       obj = "{"
       value.each do |k, v|
-        obj << k.to_s << ": " << inspect_value(v) << ", "
+        key_str = inspect_value k.to_s
+        key_str = $1 if key_str =~ /\A"([a-zA-Z]+)"\z/
+        obj << key_str << ": " << inspect_value(v) << ", "
       end
       obj.chomp! ", "
       obj << "}"
@@ -408,7 +410,8 @@ class JoshuaScript
   end
 
   def console_log(to_log, ast:, **)
-    @stdout.puts "[#{get_line ast}, #{to_log.inspect}]"
+    to_log = inspect_value to_log unless to_log.is_a? String
+    @stdout.puts "[#{get_line ast}, #{JSON.dump to_log}]"
   end
 
   def js_require(filename, **)
