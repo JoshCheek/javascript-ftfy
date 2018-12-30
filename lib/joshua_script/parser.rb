@@ -71,7 +71,7 @@ class JoshuaScript
       case json
       when Hash
         json.each do |key, value|
-          next if key == :type || key == :loc
+          next if key == :type || key == :loc || key == :params
           record_printables value, recorded
         end
       when Array

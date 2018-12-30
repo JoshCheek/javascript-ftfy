@@ -166,6 +166,50 @@ RSpec.describe 'The Interpreter' do
     JS
   end
 
+  describe 'argument destructuring' do
+    example 'arrays' do
+      js! '(([a, b]) => [a, b])([1, 2])', result: [1, 2]
+    end
+    example 'objects' do
+      js! '(({a}) => a)({a: 1})', result: 1
+    end
+    example 'multiple arguments' do
+      js! '(({a: [b]}, [c]) => [b, c])({a: [1]}, [2])', result: [1, 2]
+    end
+    example 'nested arrays' do
+      js! '(([[[a]]]) => a)([[[1]]])', result: 1
+    end
+    example 'nested objects' do
+      js! '(({a: {b}}) => b)({a: {b: 1}})', result: 1
+    end
+    example 'objects of arrays' do
+      js! '(({a: [b]}) => b)({a: [1]})', result: 1
+    end
+    example 'arrays ob objects' do
+      js! '(([{a}]) => a)([{a: 1}])', result: 1
+    end
+    example 'kinda complex example, just to push it a bit' do
+      js! <<~JS, result: [1, 2, 3, 4, 5, 6, 7]
+      function f([a, b], {c, d: [{e: [f], g}, [[h, {i}]]]}) {
+        return [a, b, c, f, g, h, i]
+      }
+      f([1, 2], {c: 3, d: [{e: [4], g: 5}, [[6, {i: 7}]]]})
+      JS
+    end
+    context 'when printing every line' do
+      it 'does not think the destructuring syntax are objects to print' do
+        result = js! <<~JS, print_every_line: true, result: 1
+        function f([a]) {
+          return a
+        }
+        f([1])
+        JS
+        printed_by_line = result.printed_jsons.to_h
+        expect(printed_by_line).to_not have_key 1
+      end
+    end
+  end
+
   it 'sets variables in the scope they were defined' do
     js! <<~JS, result: [1, 12, 1, 3]
     var a = 1,

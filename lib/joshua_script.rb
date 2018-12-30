@@ -277,16 +277,37 @@ class JoshuaScript
       Thread.current[:these].push invokable[:this, global]
       Thread.current[:scopes] = [
         *invokable[:scopes],
-        invokable[:params]
-          .map { |param| evaluate param, identifier: :to_string }
-          .zip(args)
-          .to_h
+        construct_args(invokable[:params], args).to_h
       ]
       begin
         evaluate invokable[:body]
       ensure
         Thread.current[:scopes] = old_scopes
         Thread.current[:these].pop
+      end
+    end
+  end
+
+  private def construct_args(params, args)
+    params.zip(args).flat_map do |param, arg|
+      case param[:type]
+      when 'Identifier'
+        [[param[:name], arg]]
+      when 'ArrayPattern'
+        # uhm, should we verify arg is an array here? (or maybe "iterable" or w/e the JS word is for it)
+        construct_args param[:elements], arg
+      when 'ObjectPattern'
+        param[:properties].flat_map do |prop|
+          # should we verify arg is an object and key is an identifier?
+          name, value = prop[:key][:name], prop[:value]
+          if value.type == 'Identifier' && value[:name] == name
+            [[name, arg[name]]]
+          else
+            construct_args [value], [arg[name]]
+          end
+        end
+      else
+        raise "Unhandled param type: #{param[:type].inspect}"
       end
     end
   end
