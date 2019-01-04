@@ -256,18 +256,6 @@ RSpec.describe 'The Interpreter' do
     JS
   end
 
-  it 'has the if statements, y\'all' do
-    js! <<~JS, result: [1, 2, 1, nil]
-      // TODO: Why does this need fkn blocks around the branches?
-      var a, b, c, d
-      if (true)  { a = 1 } else { a = 2 }
-      if (false) { b = 1 } else { b = 2 }
-      if (true)  { c = 1 }
-      if (false) { d = 1 }
-      ;[a, b, c, d]
-    JS
-  end
-
   it 'has those terminals!' do
     js! '(a => a ? 1 : 2)(true)', result: 1
     js! '(a => a ? 1 : 2)(false)', result: 2
@@ -326,6 +314,29 @@ RSpec.describe 'The Interpreter' do
       var a = {setX: function(val) { this.x = val }}
       a.setX(123)
       a.x
+      JS
+    end
+  end
+
+  describe 'logic' do
+    it 'has the if statements, y\'all' do
+      js! <<~JS, result: [1, 2, 1, nil]
+        // TODO: Why does this need fkn blocks around the branches?
+        var a, b, c, d
+        if (true)  { a = 1 } else { a = 2 }
+        if (false) { b = 1 } else { b = 2 }
+        if (true)  { c = 1 }
+        if (false) { d = 1 }
+        ;[a, b, c, d]
+      JS
+    end
+    it 'has boolean operators' do
+      js! <<~JS, result: [ 1, true, false, 4 ]
+         var a = true && 1
+         var b = true || 2
+         var c = false && 3
+         var d = false || 4
+         ;[a, b, c, d]
       JS
     end
   end

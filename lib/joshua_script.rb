@@ -207,6 +207,16 @@ class JoshuaScript
         evaluate ast[:alternate]
       end
 
+    when 'LogicalExpression'
+      operator = ast[:operator]
+      case operator
+      when '&&'
+        evaluate(ast[:left]) && evaluate(ast[:right])
+      when '||'
+        evaluate(ast[:left]) || evaluate(ast[:right])
+      else raise "What operator is this? #{operator.inspect}"
+      end
+
     when 'UpdateExpression'
       name        = evaluate ast[:argument], identifier: :to_s
       scope       = find_scope scopes, name
