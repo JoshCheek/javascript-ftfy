@@ -121,7 +121,7 @@ class JoshuaScript
       operator = ast[:operator]
       left     = evaluate ast[:left]
       right    = evaluate ast[:right]
-      left, right = left.to_i, right.to_i if operator == '|' || operator == '&'
+      left, right = left.to_i, right.to_i if integer_binary_op? operator
       left.send operator, right
 
     when 'VariableDeclaration'
@@ -323,6 +323,10 @@ class JoshuaScript
         raise "Unhandled param type: #{param[:type].inspect}"
       end
     end
+  end
+
+  def integer_binary_op?(operator)
+    operator == '|' || operator == '&' || operator == '<<' || operator == '>>'
   end
 
   def fn?(obj)

@@ -65,9 +65,9 @@ RSpec.describe 'The Interpreter' do
     JS
   end
 
-  it 'can add/subtract/multiply/divide/mod/bitwise-or/bitwise-and/unary-minus' do
-    js! '[10+2, 10-2, 10*2, 10/2, 4%3, 5%3, 6%3, "ab"+"cd", 5.999|1.999, 9|3, 13.999&6.999, -123]',
-        result: [12, 8, 20, 5, 1, 2, 0, "abcd", 5, 11, 4, -123]
+  it 'can add/subtract/multiply/divide/mod/bitwise-or/bitwise-and/unary-minus/bitshift-left/bitshift-right' do
+    js! '[10+2, 10-2, 10*2, 10/2, 4%3, 5%3, 6%3, "ab"+"cd", 5.999|1.999, 9|3, 13.999&6.999, -123, 8.5>>1, 8.5<<1]',
+        result: [12, 8, 20, 5, 1, 2, 0, "abcd", 5, 11, 4, -123, 4, 16]
   end
 
   it 'treats all numbers as floats' do
