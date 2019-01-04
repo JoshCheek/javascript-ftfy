@@ -22,8 +22,8 @@ RSpec.describe 'JoshuaScript' do
     JS
 
     expecteds = [
-      [ 2, /\A0 ms\z/],
-      [10, /\A0 ms\z/],
+      [ 2, /\A[01] ms\z/],
+      [10, /\A[01] ms\z/],
       [ 5, /\A1\d ms\z/],
       [ 7, /\A3\d ms\z/],
     ]
