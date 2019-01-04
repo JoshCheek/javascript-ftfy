@@ -121,6 +121,7 @@ class JoshuaScript
       operator = ast[:operator]
       left     = evaluate ast[:left]
       right    = evaluate ast[:right]
+      left, right = left.to_i, right.to_i if operator == '|' || operator == '&'
       left.send operator, right
 
     when 'VariableDeclaration'
@@ -248,7 +249,9 @@ class JoshuaScript
     when 'UnaryExpression'
       raise not_implemented unless ast[:prefix]
       obj = evaluate ast[:argument]
-      obj.send ast[:operator]
+      operator = ast[:operator]
+      operator += '@' if operator == '-'
+      obj.send operator
 
     else
       pp ast
