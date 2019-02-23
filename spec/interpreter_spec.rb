@@ -450,7 +450,7 @@ RSpec.describe 'The Interpreter' do
 
       it 'logs objects without wrapping strings around their keys unless it needs to' do
         # we're going to deviate a bit from what node prints,
-        # but matching their output exactly is high difficulty with low value
+        # as matching their output exactly is high difficulty with low value
         result = js! <<~JS
         console.log({a: 1, b: 2})
         console.log({"a b": 1})
@@ -460,6 +460,17 @@ RSpec.describe 'The Interpreter' do
           '{a: 1, b: 2}',
           '{"a b": 1}',
           '{"a\'b": 1}',
+        ]
+      end
+
+      it 'prints an empty string when given no args (implicit newline), and otherwise prints each inspection' do
+        result = js! <<~JS
+        console.log()
+        console.log(1, 2)
+        JS
+        expect(result.printed_jsons).to eq [
+          [1, ''],
+          [2, '1'], [2, '2'],
         ]
       end
     end

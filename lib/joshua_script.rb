@@ -456,9 +456,12 @@ class JoshuaScript
     @stdout.puts "[#{get_line ast}, #{time.inspect}]"
   end
 
-  def console_log(to_log, ast:, **)
-    to_log = inspect_value to_log unless to_log.is_a? String
-    @stdout.puts "[#{get_line ast}, #{JSON.dump to_log}]"
+  def console_log(*values, ast:, **)
+    values.push "" if values.empty?
+    values.each do |value|
+      value = inspect_value value unless value.is_a? String
+      @stdout.puts "[#{get_line ast}, #{JSON.dump value}]"
+    end
   end
 
   def js_require(filename, **)
