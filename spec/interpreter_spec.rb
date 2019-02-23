@@ -152,12 +152,17 @@ RSpec.describe 'The Interpreter' do
   end
 
   it 'has for-loops' do
-    js! <<~JS, result: 123
+    result = js! <<~JS, result: 123, print_every_line: true
     var n = 0
-    for(var i=0; i <= 3; ++i)
+    for(let i=0; i <= 3; ++i)
       n = n * 10 + i
     n
     JS
+    expect(
+      result.printed_jsons.select { |n, _| n == 3 }.map(&:last)
+    ).to eq(
+      ['0', '1', '12', '123']
+    )
   end
 
   it 'can create and call functions' do
