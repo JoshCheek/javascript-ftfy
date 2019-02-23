@@ -436,6 +436,12 @@ RSpec.describe 'The Interpreter' do
   end
 
 
+  describe 'global' do
+    it 'is the global object' do
+      result = js! 'global'
+      expect(result.value).to equal result.interpreter.global
+    end
+  end
 
   describe 'native functions' do
     describe 'console.log()' do

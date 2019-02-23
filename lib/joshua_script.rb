@@ -41,6 +41,7 @@ class JoshuaScript
         'log' => method(:console_log),
       },
     }
+    @global['global'] = @global
   end
 
   attr_reader :global
