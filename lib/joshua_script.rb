@@ -11,6 +11,23 @@ class JoshuaScript
     js.run
   end
 
+  module Helpers
+    private def get_line(ast)
+      ast.fetch(:loc).fetch(:end).fetch(:line)
+    end
+  end
+  include Helpers
+
+  class UnhandledAst < StandardError
+    include Helpers
+    def initialize(ast)
+      @ast = ast
+      super "Unhandled AST #{ast[:type].inspect} on line #{get_line ast}"
+    end
+  end
+
+
+
   def initialize(stdout:)
     @stdout  = stdout
     @workers = []
@@ -254,12 +271,15 @@ class JoshuaScript
       obj.send operator
 
     else
-      pp ast
-      require "pry"
-      binding().pry
+      if @stdout.tty? && $stdin.tty?
+        pp ast
+        require "pry"
+        binding().pry
+      else
+        raise UnhandledAst, ast
+      end
     end
   end
-
 
   # ===== Helpers ======
   private def not_implemented
@@ -276,10 +296,6 @@ class JoshuaScript
 
   private def find_scope(scopes, name)
     scopes.reverse_each.find { |scope| scope.key? name }
-  end
-
-  private def get_line(ast)
-    ast.fetch(:loc).fetch(:end).fetch(:line)
   end
 
   private def invoke(invokable, args, ast:)
