@@ -389,6 +389,7 @@ RSpec.describe 'The Interpreter' do
       var a = 1, b = 2
       ;[].forEach
       setTimeout
+      var o={}; o.o = o; o
       JS
 
       expecteds = [
@@ -414,6 +415,7 @@ RSpec.describe 'The Interpreter' do
         [21, "2"],
         [22, "function() { [native code] }"],
         [23, "function() { [native code: JoshuaScript#set_timeout] }"],
+        [24, "{o: [...]}"],
       ]
       result.printed_jsons.zip(expecteds).each do |actual, expected|
         expect(actual).to eq expected

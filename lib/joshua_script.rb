@@ -2,6 +2,7 @@ require 'json'
 require 'fiber'
 require 'joshua_script/ast'
 require 'joshua_script/parser'
+require 'set'
 
 
 class JoshuaScript
@@ -370,7 +371,18 @@ class JoshuaScript
     value.to_s
   end
 
-  def inspect_value(value)
+  def inspect_value(value, key=rand)
+    manage = !Thread.current[:inspection_set]
+    if manage
+      Thread.current[:inspection_set] = Set.new
+    end
+    values = Thread.current[:inspection_set]
+    if(values.include? value)
+      return '[...]'
+    else
+      values << value
+    end
+
     case value
     when String, TrueClass, FalseClass
       value.inspect.gsub("\n", '\n')
@@ -405,6 +417,8 @@ class JoshuaScript
       require "pry"
       binding.pry
     end
+  ensure
+    Thread.current[:inspection_set] = nil if manage
   end
 
   # ===== Native Functions =====
