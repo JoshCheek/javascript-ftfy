@@ -270,8 +270,13 @@ class JoshuaScript
       operator += '@' if operator == '-'
       obj.send operator
 
+    when 'TemplateLiteral'
+      exprs  = ast[:expressions].map { |e| evaluate e }
+      quasis = ast[:quasis].map { |q| q[:value][:cooked] }
+      quasis.zip(exprs).map { |q, e| "#{q}#{value_to_string e}" }.join("")
+
     else
-      if @stdout.tty? && $stdin.tty?
+      if (@stdout.tty? && $stdin.tty?) || defined?(RSpec)
         pp ast
         require "pry"
         binding().pry
@@ -352,6 +357,15 @@ class JoshuaScript
 
   def print_recorded(ast, result)
     @stdout.puts "[#{get_line ast}, #{JSON.dump inspect_value result}]"
+  end
+
+  def value_to_string(value)
+    case value
+    when Float
+      int = value.to_i
+      value = int if value == int
+    end
+    value.to_s
   end
 
   def inspect_value(value)

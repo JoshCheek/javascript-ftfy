@@ -89,6 +89,15 @@ RSpec.describe 'The Interpreter' do
     js! code, result: eval(code)
   end
 
+  describe 'templates' do
+    it 'interprets them as interpolated strings when used as strings' do
+      js! <<~JS, result: ["a", "a 123 b 123.4 c"]
+      var v = 123
+      ;[`a`, `a ${v} b ${123.4} c`]
+      JS
+    end
+  end
+
   describe 'fix JS comparison' do
     it 'can compare arrays' do
       code = <<~JS
@@ -439,7 +448,7 @@ RSpec.describe 'The Interpreter' do
         expect(version).to match "hello world"
       end
 
-      it 'logs objects without wrapping strings around their keys unless it needs to', t:true do
+      it 'logs objects without wrapping strings around their keys unless it needs to' do
         # we're going to deviate a bit from what node prints,
         # but matching their output exactly is high difficulty with low value
         result = js! <<~JS
