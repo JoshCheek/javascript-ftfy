@@ -158,10 +158,18 @@ RSpec.describe 'The Interpreter' do
       n = n * 10 + i
     n
     JS
+  end
+
+  it 'does not record the last value when the last value is non-recordable' do
+    result = js! <<~JS, print_every_line: true
+    for(let i=0; i <= 3; ++i)
+      i
+    JS
+    expect(result.value).to eq nil
     expect(
-      result.printed_jsons.select { |n, _| n == 3 }.map(&:last)
+      result.printed_jsons.select { |line, _| line == 2 }.map(&:last)
     ).to eq(
-      ['0', '1', '12', '123']
+      ["0", "1", "2", "3"]
     )
   end
 
