@@ -6,7 +6,7 @@ require 'joshua_script/parser'
 
 class JoshuaScript
   def self.eval(source, stdout:, print_every_line:)
-    js = new stdout: stdout
+    js = new stdout: stdout, print_every_line: print_every_line
     js.enqueue Parser.parse source, print_every_line: print_every_line
     js.run
   end
@@ -28,7 +28,8 @@ class JoshuaScript
 
 
 
-  def initialize(stdout:)
+  def initialize(stdout:, print_every_line: true)
+    @print_every_line = print_every_line
     @stdout  = stdout
     @workers = []
     @queue   = Queue.new
@@ -461,8 +462,10 @@ class JoshuaScript
     values.push "" if values.empty?
     values.each do |value|
       value = inspect_value value unless value.is_a? String
-      @stdout.puts "[#{get_line ast}, #{JSON.dump value}]"
+      line  = @print_every_line ? -1 : get_line(ast)
+      @stdout.puts "[#{line}, #{JSON.dump value}]"
     end
+    nil
   end
 
   def js_require(filename, **)

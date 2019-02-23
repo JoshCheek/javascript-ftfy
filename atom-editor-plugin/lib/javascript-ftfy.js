@@ -31,31 +31,36 @@ export default {
       args.push('-a')
     console.log("ARGS", args)
     const js = spawn(jsPath, args)
-    buffer.replace(/ *\/\/ => .*$/g, '')
 
+    this.clearBuffer(buffer)
     const seen = []
-    const rl = createInterface({input: js.stdout})
+    const readline = createInterface({input: js.stdout})
     let lineLen = buffer.getLines().map(l => l.length).reduce((a,b) => a < b ? b : a, 0)
     if(lineLen > 55)
       lineLen = 40 // don't put all the annotations after really long lines
 
-    rl.on('line', line => {
+    readline.on('line', line => {
       let [lineno, result] = JSON.parse(line)
-      if(typeof result === 'string')
-        result = result.replace(/\n/g, "\\n")
-      const rowno = lineno-1
-      const colno = buffer.lineLengthForRow(rowno)
-      let   text  = ''
-      if (!seen[rowno]) {
-        seen[rowno] = true
-        const paddingSize = lineLen - buffer.lineLengthForRow(rowno)
-        for(let i = 0; i < paddingSize; ++i)
-          text += ' '
-        text += `  // => ${result}`
+      if(lineno === -1) {
+        result = result.replace(/^/gm, '// => ')
+        buffer.insert( new Point(1+buffer.getLastRow(), 0), `\n${result}`)
       } else {
-        text = `, ${result}`
+        if(typeof result === 'string')
+          result = result.replace(/\n/g, "\\n")
+        const rowno = lineno-1
+        const colno = buffer.lineLengthForRow(rowno)
+        let   text  = ''
+        if (!seen[rowno]) {
+          seen[rowno] = true
+          const paddingSize = lineLen - buffer.lineLengthForRow(rowno)
+          for(let i = 0; i < paddingSize; ++i)
+            text += ' '
+          text += `  // => ${result}`
+        } else {
+          text = `, ${result}`
+        }
+        buffer.insert(new Point(rowno, colno), text)
       }
-      buffer.insert(new Point(rowno, colno), text)
     })
 
     let stderr = ''
@@ -68,8 +73,12 @@ export default {
   },
 
   clear() {
-    const editor = atom.workspace.getActiveTextEditor()
-    const buffer = editor.buffer
-    buffer && buffer.replace(/ *\/\/ => .*$/g, '')
+    this.clearBuffer(atom.workspace.getActiveTextEditor().buffer)
+  },
+
+  clearBuffer(buffer) {
+    if(!buffer) return
+    buffer.replace(/(\n\/\/ => .*$)+/gm, '') // end-of-file results
+    buffer.replace(/ *\/\/ => .*$/g, '')     // end-of-line results
   },
 }

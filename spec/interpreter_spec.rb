@@ -27,7 +27,7 @@ end
 RSpec.describe 'The Interpreter' do
   def js!(code, print_every_line: false, result: :undefined)
     stdout = StringIO.new
-    js     = JoshuaScript.new(stdout: stdout)
+    js     = JoshuaScript.new stdout: stdout, print_every_line: print_every_line
     ast    = JoshuaScript::Parser.parse code, print_every_line: print_every_line
     js.enqueue ast
     actual = js.run
@@ -449,9 +449,9 @@ RSpec.describe 'The Interpreter' do
 
       it 'prints the line number the call came from, and the inspected text' do
         result = js! 'console.log("hello world")'
-        lineno, version = result.printed_json
+        lineno, logged = result.printed_json
         expect(lineno).to eq 1
-        expect(version).to match "hello world"
+        expect(logged).to match "hello world"
       end
 
       it 'logs objects without wrapping strings around their keys unless it needs to' do
@@ -477,6 +477,20 @@ RSpec.describe 'The Interpreter' do
         expect(result.printed_jsons).to eq [
           [1, ''],
           [2, '1'], [2, '2'],
+        ]
+      end
+
+      it 'prints the lines at the end of the file when in print every line mode', t:true do
+        result = js! <<~JS, print_every_line: true
+        console.log()
+        console.log('a b\\nc d', 123)
+        JS
+        expect(result.printed_jsons).to eq [
+          [-1, ""],
+          [ 1, "null"], # should really be undefined, but we don't have a concept of undefined right now
+          [-1, "a b\nc d"],
+          [-1, "123"],
+          [ 2, "null"],
         ]
       end
     end
