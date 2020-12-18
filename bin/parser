@@ -46,7 +46,7 @@ app.get('/close', closeServer)
 server = app.listen(0, () => {
   const port = server.address().port
   doLog && console.log(`Parser listening on ${port}`)
-  fs.writeFile(portfile, port, err => {
+  fs.writeFile(portfile, port.toString(), err => {
     err && process.stderr.write(err, 'utf-8', ()=>{}) && closeServer()
   })
   setTimeout(closeServer, lifetime)
