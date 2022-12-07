@@ -2,6 +2,6 @@
     "dependencies": {
         "body-parser": "1.18.2",
         "esprima": "4.0.0",
-        "express": "4.16.2"
+        "express": "4.17.3"
     }
 }
